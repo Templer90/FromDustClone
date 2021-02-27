@@ -35,7 +35,14 @@ public class Cursor : MonoBehaviour
 
         if (Input.GetMouseButton(0))
         {
-            _terrainGenerator.Add(test.x, test.y, amount);
+            for (var x = -1; x < 1; x++)
+            {
+                for (var y = -1; y < 1; y++)
+                {
+                    _terrainGenerator.Add(test.x+x, test.y+y, Cell.Type.Water, amount);
+                }
+            }
+
         }
     }
 

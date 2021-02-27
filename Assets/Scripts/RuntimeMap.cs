@@ -12,7 +12,7 @@ public class RuntimeMap
         _map = new Cell[heightmap.Length];
         for (var i = 0; i < heightmap.Length; i++)
         {
-            _map[i] = new Cell {Stone = heightmap[i]};
+            _map[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f,Lava = 0f};
         }
     }
 
@@ -45,7 +45,7 @@ public class RuntimeMap
         };
     }
 
-    public void Add(int x, int y, float amount, Cell.Type type)
+    public void Add(int x, int y, Cell.Type type, float amount)
     {
         var cell = CellAt(x, y);
         switch (type)
@@ -83,20 +83,21 @@ public class RuntimeMap
             (0, -1), (0, +1),
             (+1, -1), (+1, 0), (+1, +1)
         };
-        const float materialStiffness = 0.0001f;
+        const float materialStiffness = 0.001f;
 
         for (var x = 1; x < _mapSize - 1; x++)
         {
             for (var y = 1; y < _mapSize - 1; y++)
             {
                 var middle = y * _mapSize + x;
+
                 for (var i = 0; i < 8; i++)
                 {
                     var other = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                    var diff = _map[middle].Stone - _map[other].Stone;
+                    var diff = _map[middle].Water - _map[other].Water;
                     var delta = diff * materialStiffness;
-                    _map[middle].Stone -= delta;
-                    _map[other].Stone += delta;
+                    _map[middle].Water -= delta;
+                    _map[other].Water += delta;
                 }
             }
         }

@@ -14,29 +14,29 @@ public class Chunk : MonoBehaviour
     [Serializable]
     public class MeshData
     {
-        public Cell.Type Type {  get; protected internal set;}
-        [NonSerialized]
-        public MeshRenderer MeshRenderer;
-        [NonSerialized]
-        public MeshFilter MeshFilter;
+        public Cell.Type Type { get; protected internal set; }
         public GameObject holder;
+
+        [NonSerialized] public MeshRenderer MeshRenderer;
+        [NonSerialized] public MeshFilter MeshFilter;
     }
 
-    public MeshData[] meshes = {
+    public MeshData[] meshes =
+    {
         new MeshData {Type = Cell.Type.Stone},
         new MeshData {Type = Cell.Type.Sand},
-        new MeshData {Type = Cell.Type.Lava},
         new MeshData {Type = Cell.Type.Water},
+        new MeshData {Type = Cell.Type.Lava}
     };
-    
+
     // Internal
     private RuntimeMap _map;
-    private Mesh _mesh;
     private int _mainSize;
     private static readonly int MaxHeight = Shader.PropertyToID("_MaxHeight");
 
 
-    public void Initialize(int x, int y, RuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling, float elevationScaling)
+    public void Initialize(int x, int y, RuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
+        float elevationScaling)
     {
         coords.x = x;
         coords.y = y;
@@ -46,22 +46,37 @@ public class Chunk : MonoBehaviour
         mapSize = chunkSize;
         scale = scaling;
         elevationScale = elevationScaling;
+
+        //Ensure that meshes is right
+        var tmpMeshes = new MeshData[4];
+        foreach (var t in meshes)
+        {
+            tmpMeshes[(int) t.Type] = t;
+        }
+
+        meshes = tmpMeshes;
     }
 
     public void Start()
     {
-        AssignMeshComponents(meshes[(int)Cell.Type.Water]);
+        AssignMeshComponents(meshes[(int) Cell.Type.Stone]);
+        AssignMeshComponents(meshes[(int) Cell.Type.Water]);
     }
 
     public void ConstructMeshes()
     {
-        ConstructMesh(meshes[(int)Cell.Type.Water]);
+        ConstructMesh(meshes[(int) Cell.Type.Stone]);
+        ConstructMesh(meshes[(int) Cell.Type.Water]);
     }
-    
-    public void UpdateMesh()
+
+    public void UpdateMeshes()
     {
-        var meshData = meshes[(int)Cell.Type.Water];
-            
+        UpdateMesh(meshes[(int) Cell.Type.Stone]);
+        UpdateMesh(meshes[(int) Cell.Type.Water]);
+    }
+
+    private void UpdateMesh(MeshData meshData)
+    {
         if (!gameObject.activeSelf) return;
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
@@ -74,7 +89,26 @@ public class Chunk : MonoBehaviour
             for (var y = 0; y < ySize; y++)
             {
                 var meshMapIndex = y * maxSize + x;
-                verts[meshMapIndex].y = GETVal(x, y, Cell.Type.Stone) * elevationScale;
+                var value = verts[meshMapIndex].y;
+                if (meshData.Type == Cell.Type.Water)
+                {
+                    var stone = GETVal(x, y, Cell.Type.Stone);
+                    var water = GETVal(x, y, Cell.Type.Water);
+                    if (water < 0.01f)
+                    {
+                        value = 0;
+                    }
+                    else
+                    {
+                        value = (stone + water) * elevationScale;
+                    }
+                }
+                else
+                {
+                    value = GETVal(x, y, meshData.Type) * elevationScale;
+                }
+
+                verts[meshMapIndex].y = value;
             }
         }
 
@@ -130,28 +164,28 @@ public class Chunk : MonoBehaviour
         {
             for (var y = 0; y < ySize; y++)
             {
-                MakeTri(x, y, GETVal(x, y,Cell.Type.Stone));
+                MakeTri(x, y, GETVal(x, y, meshData.Type));
             }
         }
 
-        if (_mesh == null)
+
+        AssignMeshComponents(meshData);
+        var mesh = meshData.MeshFilter.sharedMesh;
+        if (mesh == null)
         {
-            _mesh = new Mesh();
+            mesh = new Mesh();
         }
         else
         {
-            _mesh.Clear();
+            mesh.Clear();
         }
 
-        _mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        _mesh.vertices = verts;
-        _mesh.triangles = triangles;
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.vertices = verts;
+        mesh.triangles = triangles;
+        mesh.normals = CalculateNormals(verts, mesh.triangles);
 
-        _mesh.vertices = verts;
-        _mesh.normals = CalculateNormals(verts, _mesh.triangles);
-
-        AssignMeshComponents(meshData);
-        meshData.MeshFilter.sharedMesh = _mesh;
+        meshData.MeshFilter.sharedMesh = mesh;
         //meshData.MeshRenderer.sharedMaterial = stoneMaterial;
 
         //stoneMaterial.SetFloat(MaxHeight, elevationScale);
@@ -185,7 +219,7 @@ public class Chunk : MonoBehaviour
         meshData.MeshRenderer = meshHolder.GetComponent<MeshRenderer>();
         meshData.MeshFilter = meshHolder.GetComponent<MeshFilter>();
     }
-    
+
     private static Vector3[] CalculateNormals(Vector3[] verts, int[] triangles)
     {
         Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)

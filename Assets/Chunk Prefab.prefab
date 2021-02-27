@@ -49,8 +49,6 @@ MonoBehaviour:
   mapSize: 5
   scale: 20
   elevationScale: 30
-  stoneMaterial: {fileID: 2100000, guid: 7ef0e9d41fa636bb3a770c971ecc4355, type: 2}
-  waterMaterial: {fileID: 2100000, guid: f5d7db70a99fcdc89a87c0343ccff60a, type: 2}
   meshes:
   - holder: {fileID: 2674150349230961576}
   - holder: {fileID: 0}
@@ -149,7 +147,7 @@ GameObject:
   - component: {fileID: 8617169223661682729}
   - component: {fileID: 2289584610975280190}
   m_Layer: 0
-  m_Name: Mesh Holder
+  m_Name: Mesh Holder Stone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

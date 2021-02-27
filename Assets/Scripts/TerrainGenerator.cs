@@ -64,9 +64,10 @@ public class TerrainGenerator : MonoBehaviour
         return RuntimeMap.CellAt(x, y).WholeHeight;
     }
 
-    public void Add(int x, int y, float amount)
+    public void Add(int x, int y, Cell.Type type, float amount)
     {
-        RuntimeMap.Add(x, y, amount, Cell.Type.Stone);
+        if (!RuntimeMap.ValidCoord(x,y)) return;
+        RuntimeMap.Add(x, y, type, amount);
     }
 
 
@@ -102,7 +103,7 @@ public class TerrainGenerator : MonoBehaviour
     {
         foreach (var chunk in _chunks)
         {
-            chunk.UpdateMesh();
+            chunk.UpdateMeshes();
         }
     }
 
