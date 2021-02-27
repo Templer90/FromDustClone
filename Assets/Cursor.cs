@@ -9,7 +9,7 @@ public class Cursor : MonoBehaviour
     public Vector2Int test;
     public GameObject positionSphere;
     public float amount = 0.1f;
-    
+
     private Camera _cam;
     private TerrainGenerator _terrainGenerator;
 
@@ -30,6 +30,8 @@ public class Cursor : MonoBehaviour
 
         test = _terrainGenerator.WorldCoordinatesToCell(worldPosition);
         worldPosition.y = _terrainGenerator.getValueAt(test.x, test.y) * _terrainGenerator.elevationScale;
+        //worldPosition.x = test.x * _terrainGenerator.scale;
+        //worldPosition.z = test.y * _terrainGenerator.scale;
 
         positionSphere.transform.position = worldPosition;
 
@@ -39,10 +41,9 @@ public class Cursor : MonoBehaviour
             {
                 for (var y = -1; y < 1; y++)
                 {
-                    _terrainGenerator.Add(test.x+x, test.y+y, Cell.Type.Water, amount);
+                    _terrainGenerator.Add(test.x + x, test.y + y, Cell.Type.Water, amount);
                 }
             }
-
         }
     }
 

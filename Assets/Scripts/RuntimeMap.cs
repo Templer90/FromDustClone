@@ -70,13 +70,6 @@ public class RuntimeMap
 
     public void MapUpdate()
     {
-        var random = new Random();
-
-        var randPos = random.Next(0, _map.Length);
-        var randval = (random.NextDouble() - 0.5d);
-        //_map[randPos].Stone += (float) randval;
-
-
         var kernel = new[]
         {
             (-1, -1), (-1, 0), (-1, +1),

@@ -78,6 +78,33 @@ public class Chunk : MonoBehaviour
     private void UpdateMesh(MeshData meshData)
     {
         if (!gameObject.activeSelf) return;
+
+        float StoneUpdate(int x, int y)
+        {
+            return GETVal(x, y, Cell.Type.Stone) * elevationScale;
+        }
+
+        float WaterUpdate(int x, int y)
+        {
+            var water = GETVal(x, y, Cell.Type.Water);
+            if (water < 0.01f)
+            {
+                return 0;
+            }
+            return (GETVal(x, y, Cell.Type.Stone) + water) * elevationScale;
+        }
+
+        Func<int,int,float > updateFunc;
+        if (meshData.Type == Cell.Type.Water)
+        {
+            updateFunc = WaterUpdate;
+        }
+        else
+        {
+            updateFunc = StoneUpdate;
+        }              
+        
+        
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
         var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
@@ -89,26 +116,8 @@ public class Chunk : MonoBehaviour
             for (var y = 0; y < ySize; y++)
             {
                 var meshMapIndex = y * maxSize + x;
-                var value = verts[meshMapIndex].y;
-                if (meshData.Type == Cell.Type.Water)
-                {
-                    var stone = GETVal(x, y, Cell.Type.Stone);
-                    var water = GETVal(x, y, Cell.Type.Water);
-                    if (water < 0.01f)
-                    {
-                        value = 0;
-                    }
-                    else
-                    {
-                        value = (stone + water) * elevationScale;
-                    }
-                }
-                else
-                {
-                    value = GETVal(x, y, meshData.Type) * elevationScale;
-                }
 
-                verts[meshMapIndex].y = value;
+                verts[meshMapIndex].y = updateFunc(x, y);
             }
         }
 
