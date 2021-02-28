@@ -12,7 +12,7 @@ public class RuntimeMap
         _map = new Cell[heightmap.Length];
         for (var i = 0; i < heightmap.Length; i++)
         {
-            _map[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f,Lava = 0f};
+            _map[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f, Lava = 0f};
         }
     }
 
@@ -67,8 +67,7 @@ public class RuntimeMap
         }
     }
 
-
-    public void MapUpdate()
+    public void SimpleSmooth()
     {
         var kernel = new[]
         {
@@ -91,6 +90,47 @@ public class RuntimeMap
                     var delta = diff * materialStiffness;
                     _map[middle].Water -= delta;
                     _map[other].Water += delta;
+                }
+            }
+        }
+    }
+
+
+    public void MapUpdate()
+    {
+        var kernel = new[]
+        {
+            (-1, -1), (-1, 0), (-1, +1),
+            (0, -1), (0, +1),
+            (+1, -1), (+1, 0), (+1, +1)
+        };
+
+        var offset = 0.01f;
+
+        for (var x = 1; x < _mapSize - 1; x++)
+        {
+            for (var y = 1; y < _mapSize - 1; y++)
+            {
+                var middle = y * _mapSize + x;
+                var center = _map[middle];
+                for (var i = 0; i < 8; i++)
+                {
+                    var other = _map[(y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2)];
+                    var waterHeight = center.Stone + center.Water;
+                    var otherWaterHeight = other.Stone + other.Water;
+
+                    if (center.Water < 0.001f)
+                    {
+                        center.Water = 0;
+                        continue;
+                    }
+
+                    if (other.Stone > waterHeight) continue;
+                    if (otherWaterHeight > waterHeight) continue;
+
+                    var diff = waterHeight - otherWaterHeight;
+                    center.Water -= diff / 2 * offset;
+                    other.Water += diff / 2 * offset;
                 }
             }
         }
