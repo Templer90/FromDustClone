@@ -52,8 +52,8 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Editor\MeshEditor.cs" />
      <Compile Include="Assets\Editor\NormalsVisualizer.cs" />
+     <Compile Include="Assets\Editor\MeshEditor.cs" />
  <Reference Include="UnityEngine">
  <HintPath>/home/eric/Unity/Hub/Editor/2020.2.2f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>

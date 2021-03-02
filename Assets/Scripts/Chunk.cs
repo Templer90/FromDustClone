@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-
 public class Chunk : MonoBehaviour
 {
     [Header("Mesh Settings")] public Vector2 coords = new Vector2(0, 0);
@@ -17,8 +16,8 @@ public class Chunk : MonoBehaviour
         public Cell.Type Type { get; protected internal set; }
         public GameObject holder;
 
-        [NonSerialized] public MeshRenderer MeshRenderer;
-        [NonSerialized] public MeshFilter MeshFilter;
+        [NonSerialized] public MeshRenderer meshRenderer;
+        [NonSerialized] public MeshFilter meshFilter;
     }
 
     public MeshData[] meshes =
@@ -79,10 +78,8 @@ public class Chunk : MonoBehaviour
     {
         if (!gameObject.activeSelf) return;
 
-        float StoneUpdate(int x, int y)
-        {
-            return GETVal(x, y, Cell.Type.Stone) * elevationScale;
-        }
+        float StoneUpdate(int x, int y) => GETVal(x, y, Cell.Type.Stone) * elevationScale;
+        
 
         float WaterUpdate(int x, int y)
         {
@@ -110,7 +107,7 @@ public class Chunk : MonoBehaviour
         var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
         var maxSize = mapSize + 1;
 
-        var verts = meshData.MeshFilter.mesh.vertices;
+        var verts = meshData.meshFilter.mesh.vertices;
         for (var x = 0; x < xSize; x++)
         {
             for (var y = 0; y < ySize; y++)
@@ -121,7 +118,7 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        var mesh = meshData.MeshFilter.mesh;
+        var mesh = meshData.meshFilter.mesh;
         mesh.vertices = verts;
         mesh.normals = CalculateNormals(verts, mesh.triangles);
     }
@@ -133,6 +130,47 @@ public class Chunk : MonoBehaviour
     }
 
     private void ConstructMesh(MeshData meshData)
+    {
+        if (true)
+        {
+            ConstructMesh_New( meshData);
+        }
+        else
+        {
+            ConstructMesh_Old( meshData);
+        }
+    }
+    
+    private void ConstructMesh_New(MeshData meshData)
+    {
+        float GETFunc(int x, int y)
+        {
+            var xpos = (int) coords.x * mapSize + (x == -1?0:x);
+            var ypos = (int) coords.y * mapSize + (y == -1?0:y);
+            try
+            {
+                if (!_map.ValidCoord(xpos, ypos)) return float.NaN;
+                return  _map.ValueAt(xpos, ypos, meshData.Type);
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e);
+                Debug.Log(x+" "+y+"-"+ (y * _map._mapSize + x)+" "+xpos+" "+ypos);
+                return float.NaN;
+            }
+
+        }
+
+        var genMesh=MeshGenerator2.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale, mapSize);
+
+        AssignMeshComponents(meshData);
+        meshData.meshFilter.sharedMesh = genMesh.CreateMesh();
+        //meshData.MeshRenderer.sharedMaterial = stoneMaterial;
+
+        //stoneMaterial.SetFloat(MaxHeight, elevationScale);
+    }
+    
+        private void ConstructMesh_Old(MeshData meshData)
     {
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
@@ -148,7 +186,7 @@ public class Chunk : MonoBehaviour
             var meshMapIndex = y * maxSize + x;
 
             var percent = new Vector2(x / (maxSize - 1f), y / (maxSize - 1f));
-            var pos = new Vector3(percent.x * 2 - 1, 0, percent.y * 2 - 1) * scale;
+            var pos = new Vector3(percent.x  - 1, 0, percent.y  - 1) * scale;
 
             pos += Vector3.up * (normalizedHeight * elevationScale);
             verts[meshMapIndex] = pos;
@@ -179,7 +217,7 @@ public class Chunk : MonoBehaviour
 
 
         AssignMeshComponents(meshData);
-        var mesh = meshData.MeshFilter.sharedMesh;
+        var mesh = meshData.meshFilter.sharedMesh;
         if (mesh == null)
         {
             mesh = new Mesh();
@@ -194,7 +232,7 @@ public class Chunk : MonoBehaviour
         mesh.triangles = triangles;
         mesh.normals = CalculateNormals(verts, mesh.triangles);
 
-        meshData.MeshFilter.sharedMesh = mesh;
+        meshData.meshFilter.sharedMesh = mesh;
         //meshData.MeshRenderer.sharedMaterial = stoneMaterial;
 
         //stoneMaterial.SetFloat(MaxHeight, elevationScale);
@@ -225,11 +263,11 @@ public class Chunk : MonoBehaviour
             meshHolder.gameObject.AddComponent<MeshRenderer>();
         }
 
-        meshData.MeshRenderer = meshHolder.GetComponent<MeshRenderer>();
-        meshData.MeshFilter = meshHolder.GetComponent<MeshFilter>();
+        meshData.meshRenderer = meshHolder.GetComponent<MeshRenderer>();
+        meshData.meshFilter = meshHolder.GetComponent<MeshFilter>();
     }
 
-    private static Vector3[] CalculateNormals(Vector3[] verts, int[] triangles)
+    private Vector3[] CalculateNormals(Vector3[] verts, int[] triangles)
     {
         Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
         {

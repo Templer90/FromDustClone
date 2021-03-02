@@ -54,11 +54,13 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\Cell.cs" />
      <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
+     <Compile Include="Assets\Cursor.cs" />
      <Compile Include="Assets\Scripts\SynchronizedThread.cs" />
      <Compile Include="Assets\Scripts\Chunk.cs" />
      <Compile Include="Assets\Scripts\RuntimeMap.cs" />
+     <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <Compile Include="Assets\Scripts\HeightMapGenerator.cs" />
-     <Compile Include="Assets\Cursor.cs" />
+     <Compile Include="Assets\Scripts\MeshGenerator2.cs" />
      <None Include="Assets\Shaders\Terrain.shader" />
      <None Include="Assets\Scripts\ComputeShaders\HeightMap.compute" />
  <Reference Include="UnityEngine">

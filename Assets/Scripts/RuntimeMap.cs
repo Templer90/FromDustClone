@@ -1,10 +1,11 @@
 using System;
+using UnityEngine;
 using Random = System.Random;
 
 public class RuntimeMap
 {
     private Cell[] _map;
-    private readonly int _mapSize;
+    public readonly int _mapSize;
 
     public RuntimeMap(float[] heightmap, int mapsize)
     {

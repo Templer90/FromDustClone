@@ -82,7 +82,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for (var y = 0; y < numChunks; y++)
             {
-                var pos = new Vector3(x * scale * 2, 0, y * scale * 2);
+                var pos = new Vector3(x * scale, 0, y * scale);
                 var child = Instantiate(chunkPrefab, transform);
                 child.name = "Chunk(" + x + "," + y + ")";
                 child.transform.position = pos;
