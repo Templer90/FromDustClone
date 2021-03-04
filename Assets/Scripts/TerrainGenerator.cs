@@ -47,8 +47,8 @@ public class TerrainGenerator : MonoBehaviour
     {
         var ret = new Vector2Int(0, 0);
         world.y = 0;
-        ret.x = (int) (world.x);
-        ret.y = (int) (world.z);
+        ret.x = (int) ((world.x * chunksize / (scale)));
+        ret.y = (int) ((world.z * chunksize / (scale)));
 
         if (ret.x > mapSize) ret.x = mapSize;
         if (ret.x <= 0) ret.x = 0;
@@ -66,7 +66,7 @@ public class TerrainGenerator : MonoBehaviour
 
     public void Add(int x, int y, Cell.Type type, float amount)
     {
-        if (!RuntimeMap.ValidCoord(x,y)) return;
+        if (!RuntimeMap.ValidCoord(x, y)) return;
         RuntimeMap.Add(x, y, type, amount);
     }
 

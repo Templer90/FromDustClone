@@ -1,7 +1,5 @@
 using System;
-using System.Linq.Expressions;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class Chunk : MonoBehaviour
 {
@@ -77,21 +75,36 @@ public class Chunk : MonoBehaviour
     private void UpdateMesh(MeshData meshData)
     {
         if (!gameObject.activeSelf) return;
-
-        float StoneUpdate(int x, int y) => GETVal(x, y, Cell.Type.Stone) * elevationScale;
         
+        var numChunks = (_mainSize / mapSize);
+        var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
+        var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
+        var maxSize = mapSize + 1;
 
-        float WaterUpdate(int x, int y)
+        var mesh1 = meshData.meshFilter.mesh;
+        var verts = mesh1.vertices;
+        var color = mesh1.colors;
+
+        void StoneUpdate(int x, int y, int meshMapIndex)
         {
-            var water = GETVal(x, y, Cell.Type.Water);
-            if (water < 0.01f)
-            {
-                return 0;
-            }
-            return (GETVal(x, y, Cell.Type.Stone) + water) * elevationScale;
+            verts[meshMapIndex].y = GETVal(x, y, Cell.Type.Stone) * elevationScale;
+            color[meshMapIndex].r = GETVal(x, y, Cell.Type.Sand);
         }
 
-        Func<int,int,float > updateFunc;
+        void WaterUpdate(int x, int y, int meshMapIndex)
+        {
+            var water = GETVal(x, y, Cell.Type.Water);
+            if (water < 0.0001f)
+            {
+                verts[meshMapIndex].y = 0;
+            }
+            else
+            {
+                verts[meshMapIndex].y = (GETVal(x, y, Cell.Type.Stone) + water) * elevationScale;
+            }
+        }
+
+        Action<int,int,int> updateFunc;
         if (meshData.Type == Cell.Type.Water)
         {
             updateFunc = WaterUpdate;
@@ -99,28 +112,22 @@ public class Chunk : MonoBehaviour
         else
         {
             updateFunc = StoneUpdate;
-        }              
-        
-        
-        var numChunks = (_mainSize / mapSize);
-        var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
-        var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
-        var maxSize = mapSize + 1;
+        }
 
-        var verts = meshData.meshFilter.mesh.vertices;
         for (var x = 0; x < xSize; x++)
         {
             for (var y = 0; y < ySize; y++)
             {
                 var meshMapIndex = y * maxSize + x;
-
-                verts[meshMapIndex].y = updateFunc(x, y);
+                updateFunc(x, y, meshMapIndex);
             }
         }
 
         var mesh = meshData.meshFilter.mesh;
         mesh.vertices = verts;
-        mesh.normals = CalculateNormals(verts, mesh.triangles);
+        mesh.colors = color;
+        //mesh.RecalculateNormals();
+        //mesh.normals = CalculateNormals(verts, mesh.triangles);
     }
 
 
@@ -131,113 +138,39 @@ public class Chunk : MonoBehaviour
 
     private void ConstructMesh(MeshData meshData)
     {
-        if (true)
-        {
-            ConstructMesh_New( meshData);
-        }
-        else
-        {
-            ConstructMesh_Old( meshData);
-        }
+        ConstructMesh_Internal( meshData);
     }
     
-    private void ConstructMesh_New(MeshData meshData)
+    private void ConstructMesh_Internal(MeshData meshData)
     {
         float GETFunc(int x, int y)
         {
-            var xpos = (int) coords.x * mapSize + (x == -1?0:x);
-            var ypos = (int) coords.y * mapSize + (y == -1?0:y);
+            var xPos = (int) coords.x * mapSize + (x == -1?0:x);
+            var yPos = (int) coords.y * mapSize + (y == -1?0:y);
             try
             {
-                if (!_map.ValidCoord(xpos, ypos)) return float.NaN;
-                return  _map.ValueAt(xpos, ypos, meshData.Type);
+                return _map.ValidCoord(xPos, yPos) ? _map.ValueAt(xPos, yPos, meshData.Type) : float.NaN;
             }
             catch (Exception e)
             {
                 Debug.Log(e);
-                Debug.Log(x+" "+y+"-"+ (y * _map._mapSize + x)+" "+xpos+" "+ypos);
                 return float.NaN;
             }
-
         }
 
-        var genMesh=MeshGenerator2.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale, mapSize);
+        var genMesh=MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
 
         AssignMeshComponents(meshData);
-        meshData.meshFilter.sharedMesh = genMesh.CreateMesh();
-        //meshData.MeshRenderer.sharedMaterial = stoneMaterial;
+        var mesh = genMesh.CreateMesh();
+        mesh.name = coords.x + " " + coords.y;
+        meshData.meshFilter.sharedMesh = mesh;
 
-        //stoneMaterial.SetFloat(MaxHeight, elevationScale);
+        if (!meshData.holder.transform.GetComponent<MeshCollider>()) return;
+        var coll = meshData.holder.transform.gameObject.GetComponent<MeshCollider>();
+        coll.sharedMesh = mesh;
+
     }
     
-        private void ConstructMesh_Old(MeshData meshData)
-    {
-        var numChunks = (_mainSize / mapSize);
-        var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
-        var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
-        var maxSize = mapSize + 1;
-
-        var verts = new Vector3[maxSize * maxSize];
-        var triangles = new int[(maxSize - 1) * (maxSize - 1) * 6];
-        var t = 0;
-
-        void MakeTri(int x, int y, float normalizedHeight)
-        {
-            var meshMapIndex = y * maxSize + x;
-
-            var percent = new Vector2(x / (maxSize - 1f), y / (maxSize - 1f));
-            var pos = new Vector3(percent.x  - 1, 0, percent.y  - 1) * scale;
-
-            pos += Vector3.up * (normalizedHeight * elevationScale);
-            verts[meshMapIndex] = pos;
-
-            // Construct triangles
-            if (x != xSize - 1 && y != ySize - 1)
-            {
-                t = (y * (maxSize - 1) + x) * 3 * 2;
-
-                triangles[t + 0] = meshMapIndex + maxSize;
-                triangles[t + 1] = meshMapIndex + maxSize + 1;
-                triangles[t + 2] = meshMapIndex;
-
-                triangles[t + 3] = meshMapIndex + maxSize + 1;
-                triangles[t + 4] = meshMapIndex + 1;
-                triangles[t + 5] = meshMapIndex;
-                t += 6;
-            }
-        }
-
-        for (var x = 0; x < xSize; x++)
-        {
-            for (var y = 0; y < ySize; y++)
-            {
-                MakeTri(x, y, GETVal(x, y, meshData.Type));
-            }
-        }
-
-
-        AssignMeshComponents(meshData);
-        var mesh = meshData.meshFilter.sharedMesh;
-        if (mesh == null)
-        {
-            mesh = new Mesh();
-        }
-        else
-        {
-            mesh.Clear();
-        }
-
-        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        mesh.vertices = verts;
-        mesh.triangles = triangles;
-        mesh.normals = CalculateNormals(verts, mesh.triangles);
-
-        meshData.meshFilter.sharedMesh = mesh;
-        //meshData.MeshRenderer.sharedMaterial = stoneMaterial;
-
-        //stoneMaterial.SetFloat(MaxHeight, elevationScale);
-    }
-
     private void AssignMeshComponents(MeshData meshData)
     {
         var holder = meshData.holder;
@@ -265,41 +198,5 @@ public class Chunk : MonoBehaviour
 
         meshData.meshRenderer = meshHolder.GetComponent<MeshRenderer>();
         meshData.meshFilter = meshHolder.GetComponent<MeshFilter>();
-    }
-
-    private Vector3[] CalculateNormals(Vector3[] verts, int[] triangles)
-    {
-        Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
-        {
-            var pointA = verts[indexA];
-            var pointB = verts[indexB];
-            var pointC = verts[indexC];
-
-            var sideAb = pointB - pointA;
-            var sideAc = pointC - pointA;
-            return Vector3.Cross(sideAb, sideAc).normalized;
-        }
-
-        var vertxNormals = new Vector3[verts.Length];
-        var triangleCount = triangles.Length / 3;
-        for (var i = 0; i < triangleCount; i++)
-        {
-            var normalTriangleIndex = i * 3;
-            var vertIndexA = triangles[normalTriangleIndex + 0];
-            var vertIndexB = triangles[normalTriangleIndex + 1];
-            var vertIndexC = triangles[normalTriangleIndex + 2];
-
-            var triangleNormal = SurfaceNormalFromIndices(vertIndexA, vertIndexB, vertIndexC);
-            vertxNormals[vertIndexA] += triangleNormal;
-            vertxNormals[vertIndexB] += triangleNormal;
-            vertxNormals[vertIndexC] += triangleNormal;
-        }
-
-        for (var i = 0; i < vertxNormals.Length; i++)
-        {
-            vertxNormals[i].Normalize();
-        }
-
-        return vertxNormals;
     }
 }

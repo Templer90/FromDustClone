@@ -52,16 +52,15 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Cell.cs" />
      <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
-     <Compile Include="Assets\Cursor.cs" />
-     <Compile Include="Assets\Scripts\SynchronizedThread.cs" />
      <Compile Include="Assets\Scripts\Chunk.cs" />
      <Compile Include="Assets\Scripts\RuntimeMap.cs" />
-     <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <Compile Include="Assets\Scripts\HeightMapGenerator.cs" />
-     <Compile Include="Assets\Scripts\MeshGenerator2.cs" />
-     <None Include="Assets\Shaders\Terrain.shader" />
+     <Compile Include="Assets\Scripts\Cell.cs" />
+     <Compile Include="Assets\Scripts\Behaviours\Cursor.cs" />
+     <Compile Include="Assets\Scripts\Behaviours\Spring.cs" />
+     <Compile Include="Assets\Scripts\SynchronizedThread.cs" />
+     <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <None Include="Assets\Scripts\ComputeShaders\HeightMap.compute" />
  <Reference Include="UnityEngine">
  <HintPath>/home/eric/Unity/Hub/Editor/2020.2.2f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
@@ -627,8 +626,20 @@
  <Reference Include="mscorlib">
  <HintPath>/home/eric/Unity/Hub/Editor/2020.2.2f1/Editor/Data/NetStandard/compat/2.0.0/shims/netfx/mscorlib.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.ShaderGraph.Editor">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.ShaderGraph.Editor.dll</HintPath>
+ </Reference>
  <Reference Include="Unity.VSCode.Editor">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.VSCode.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.RenderPipelines.Universal.Shaders">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.RenderPipelines.Universal.Editor">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.RenderPipelines.Universal.Runtime">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
  </Reference>
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
@@ -636,14 +647,29 @@
  <Reference Include="Unity.VisualStudio.Editor">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.VisualStudio.Editor.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
+ </Reference>
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
  </Reference>
  <Reference Include="Unity.Timeline">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
+ </Reference>
  <Reference Include="Unity.TextMeshPro">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Mathematics.Editor">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Mathematics.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Searcher.Editor">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Searcher.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.RenderPipelines.Core.Runtime">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Core.Runtime.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.UI">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
@@ -651,8 +677,17 @@
  <Reference Include="Unity.Rider.Editor">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
  </Reference>
+ <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
+ </Reference>
  <Reference Include="UnityEngine.UI">
  <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.RenderPipelines.Core.Editor">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.RenderPipelines.Core.Editor.dll</HintPath>
+ </Reference>
+ <Reference Include="Unity.Mathematics">
+ <HintPath>/home/eric/RiderProjects/From Dust/Library/ScriptAssemblies/Unity.Mathematics.dll</HintPath>
  </Reference>
   </ItemGroup>
   <ItemGroup>

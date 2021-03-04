@@ -15,3 +15,11 @@ public class Cell
         Lava,
     }
 }
+
+public struct AdditionalVertexData
+{
+    public float Sand;
+    public float Water;
+    public float Lava;
+    public float a;
+}

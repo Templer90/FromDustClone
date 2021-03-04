@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 3476726020640360066}
   - component: {fileID: 8617169223661682729}
   - component: {fileID: 2289584610975280190}
+  - component: {fileID: 7707011050820739463}
   m_Layer: 0
   m_Name: Mesh Holder Stone
   m_TagString: Untagged
@@ -194,7 +195,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7ef0e9d41fa636bb3a770c971ecc4355, type: 2}
+  - {fileID: 2100000, guid: 4340dbb3dc6f36ed487e8d8457094fc7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -216,3 +217,17 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &7707011050820739463
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2674150349230961576}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}

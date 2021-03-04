@@ -1,14 +1,16 @@
 using System;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Random = System.Random;
 
 public class RuntimeMap
 {
-    private Cell[] _map;
-    public readonly int _mapSize;
+    private readonly Cell[] _map;
+    private readonly int _mapSize;
 
     public RuntimeMap(float[] heightmap, int mapsize)
     {
+        Assert.AreEqual(heightmap.Length, (mapsize+1)*(mapsize+1));
         _mapSize = mapsize;
         _map = new Cell[heightmap.Length];
         for (var i = 0; i < heightmap.Length; i++)
