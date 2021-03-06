@@ -91,7 +91,7 @@ public class Chunk : MonoBehaviour
             var sand = GETVal(x, y, Cell.Type.Sand);
 
             color[meshMapIndex].r = sand;
-            verts[meshMapIndex].y = stone * elevationScale;
+            verts[meshMapIndex].y = (stone +sand)* elevationScale;
         }
 
         void WaterUpdate(int x, int y, int meshMapIndex)

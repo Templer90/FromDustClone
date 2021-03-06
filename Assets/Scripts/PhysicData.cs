@@ -7,6 +7,8 @@ public class PhysicData
     [Header("Sand Settings")]
     public float SandHardness = 1f;
     public float SandStiffness = 0.001f;
+    public float SandViscosity = 0.0000001f;
+    public float Sand_dt = 0.2f;
     
     [Header("Water Settings")]
     public float WaterViscosity = 0.01f;

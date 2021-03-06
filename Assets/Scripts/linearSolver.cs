@@ -14,6 +14,15 @@ using UnityEngine;
 
 public class LinearSolver
 {
+    float visc;
+    float diff;
+    float dt;
+    float[] Vx;
+    float[] Vy;
+    float[] Vx0;
+    float[] Vy0;
+    float[] s;
+    float[] density;
     public int N = 0;
     public int iter = 16;
 
@@ -126,10 +135,10 @@ public class LinearSolver
                 t1 = y - j0;
                 t0 = 1.0f - t1;
 
-                int i0i = (int)i0;
-                int i1i = (int)i1;
-                int j0i = (int)j0;
-                int j1i = (int)j1;
+                int i0i = (int) i0;
+                int i1i = (int) i1;
+                int j0i = (int) j0;
+                int j1i = (int) j1;
 
                 // DOUBLE CHECK THIS!!!
                 d[IX(i, j)] =
@@ -160,5 +169,22 @@ public class LinearSolver
         x[IX(0, N - 1)] = 0.5f * (x[IX(1, N - 1)] + x[IX(0, N - 2)]);
         x[IX(N - 1, 0)] = 0.5f * (x[IX(N - 2, 0)] + x[IX(N - 1, 1)]);
         x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);
+    }
+
+
+    void step()
+    {
+        diffuse(1, Vx0, Vx, visc, dt);
+        diffuse(2, Vy0, Vy, visc, dt);
+
+        project(Vx0, Vy0, Vx, Vy);
+
+        advect(1, Vx, Vx0, Vx0, Vy0, dt);
+        advect(2, Vy, Vy0, Vx0, Vy0, dt);
+
+        project(Vx, Vy, Vx0, Vy0);
+
+        diffuse(0, s, density, diff, dt);
+        advect(0, density, s, Vx, Vy, dt);
     }
 }
