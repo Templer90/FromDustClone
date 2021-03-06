@@ -41,6 +41,9 @@ public class TerrainGenerator : MonoBehaviour
                 elevationScale);
             _chunks[i] = chunk;
         }
+        
+        var holder = FindObjectOfType<RuntimeMapHolder>();
+        holder.Notify(this);
     }
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)

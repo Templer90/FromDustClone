@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Random = System.Random;
@@ -8,12 +10,14 @@ public class RuntimeMap
     private readonly Cell[] _map;
     private readonly int _mapSize;
 
-    public RuntimeMap(float[] heightmap, int mapsize)
+    public readonly PhysicData physic = new PhysicData();
+
+    public RuntimeMap(IReadOnlyList<float> heightmap, int heightMapSize)
     {
-        Assert.AreEqual(heightmap.Length, (mapsize+1)*(mapsize+1));
-        _mapSize = mapsize;
-        _map = new Cell[heightmap.Length];
-        for (var i = 0; i < heightmap.Length; i++)
+        Assert.AreEqual(heightmap.Count, (heightMapSize + 1) * (heightMapSize + 1));
+        _mapSize = heightMapSize;
+        _map = new Cell[heightmap.Count];
+        for (var i = 0; i < heightmap.Count; i++)
         {
             _map[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f, Lava = 0f};
         }
@@ -30,7 +34,7 @@ public class RuntimeMap
         return _map[y * _mapSize + x];
     }
 
-    public float ValueAt(int x, int y)
+    public float WholeAt(int x, int y)
     {
         return CellAt(x, y).WholeHeight;
     }
@@ -101,40 +105,55 @@ public class RuntimeMap
 
     public void MapUpdate()
     {
-        var kernel = new[]
+        var kernel = physic.GETKernel();
+  
+        void HandleWater(Cell centerCell, int x, int y)
         {
-            (-1, -1), (-1, 0), (-1, +1),
-            (0, -1), (0, +1),
-            (+1, -1), (+1, 0), (+1, +1)
-        };
+            for (var i = 0; i < kernel.Length; i++)
+            {
+                var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
+                var otherCell = _map[otherIndex];
 
-        var offset = 0.01f;
+                if (centerCell.Water < physic.EvaporationThreshold)
+                {
+                    centerCell.Water = 0;
+                    continue;
+                }
+
+                var waterHeight = centerCell.Stone + centerCell.Water;
+                var otherWaterHeight = otherCell.Stone + otherCell.Water;
+                if (otherCell.Stone > waterHeight) continue;
+                if (otherWaterHeight > waterHeight) continue;
+                var waterDiff = waterHeight - otherWaterHeight;
+                centerCell.Water -= waterDiff / 2 * physic.WaterViscosity;
+                otherCell.Water += waterDiff / 2 * physic.WaterViscosity;
+            }
+        }
+
+        void HandleSand(Cell centerCell, int x, int y)
+        {
+            if (centerCell.Sand < physic.SandStiffness) return;
+            for (var i = 0; i < kernel.Length; i++)
+            {
+                var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
+                var otherCell = _map[otherIndex];
+                var sandDiff = (centerCell.Stone + centerCell.Sand) - (otherCell.Stone + otherCell.Sand);
+                var delta = sandDiff * physic.SandHardness;
+
+                centerCell.Sand -= delta;
+                otherCell.Sand += delta;
+            }
+        }
 
         for (var x = 1; x < _mapSize - 1; x++)
         {
             for (var y = 1; y < _mapSize - 1; y++)
             {
-                var middle = y * _mapSize + x;
-                var center = _map[middle];
-                for (var i = 0; i < 8; i++)
-                {
-                    var other = _map[(y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2)];
-                    var waterHeight = center.Stone + center.Water;
-                    var otherWaterHeight = other.Stone + other.Water;
+                var middleIndex = y * _mapSize + x;
+                var centerCell = _map[middleIndex];
 
-                    if (center.Water < 0.001f)
-                    {
-                        center.Water = 0;
-                        continue;
-                    }
-
-                    if (other.Stone > waterHeight) continue;
-                    if (otherWaterHeight > waterHeight) continue;
-
-                    var diff = waterHeight - otherWaterHeight;
-                    center.Water -= diff / 2 * offset;
-                    other.Water += diff / 2 * offset;
-                }
+                HandleSand(centerCell, x, y);
+                //HandleWater(centerCell, x, y);
             }
         }
     }

@@ -75,7 +75,7 @@ public class Chunk : MonoBehaviour
     private void UpdateMesh(MeshData meshData)
     {
         if (!gameObject.activeSelf) return;
-        
+
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
         var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
@@ -87,8 +87,11 @@ public class Chunk : MonoBehaviour
 
         void StoneUpdate(int x, int y, int meshMapIndex)
         {
-            verts[meshMapIndex].y = GETVal(x, y, Cell.Type.Stone) * elevationScale;
-            color[meshMapIndex].r = GETVal(x, y, Cell.Type.Sand);
+            var stone = GETVal(x, y, Cell.Type.Stone);
+            var sand = GETVal(x, y, Cell.Type.Sand);
+
+            color[meshMapIndex].r = sand;
+            verts[meshMapIndex].y = stone * elevationScale;
         }
 
         void WaterUpdate(int x, int y, int meshMapIndex)
@@ -104,7 +107,7 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        Action<int,int,int> updateFunc;
+        Action<int, int, int> updateFunc;
         if (meshData.Type == Cell.Type.Water)
         {
             updateFunc = WaterUpdate;
@@ -138,15 +141,15 @@ public class Chunk : MonoBehaviour
 
     private void ConstructMesh(MeshData meshData)
     {
-        ConstructMesh_Internal( meshData);
+        ConstructMesh_Internal(meshData);
     }
-    
+
     private void ConstructMesh_Internal(MeshData meshData)
     {
         float GETFunc(int x, int y)
         {
-            var xPos = (int) coords.x * mapSize + (x == -1?0:x);
-            var yPos = (int) coords.y * mapSize + (y == -1?0:y);
+            var xPos = (int) coords.x * mapSize + (x == -1 ? 0 : x);
+            var yPos = (int) coords.y * mapSize + (y == -1 ? 0 : y);
             try
             {
                 return _map.ValidCoord(xPos, yPos) ? _map.ValueAt(xPos, yPos, meshData.Type) : float.NaN;
@@ -158,7 +161,7 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        var genMesh=MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
+        var genMesh = MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
 
         AssignMeshComponents(meshData);
         var mesh = genMesh.CreateMesh();
@@ -168,9 +171,8 @@ public class Chunk : MonoBehaviour
         if (!meshData.holder.transform.GetComponent<MeshCollider>()) return;
         var coll = meshData.holder.transform.gameObject.GetComponent<MeshCollider>();
         coll.sharedMesh = mesh;
-
     }
-    
+
     private void AssignMeshComponents(MeshData meshData)
     {
         var holder = meshData.holder;
