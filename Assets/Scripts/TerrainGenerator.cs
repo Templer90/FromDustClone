@@ -19,8 +19,12 @@ public class TerrainGenerator : MonoBehaviour
     // Internal
     public float[] _map;
     private Chunk[] _chunks;
-    public RuntimeMap RuntimeMap;
+    public IRuntimeMap RuntimeMap;
 
+    private IRuntimeMap MakeNewRuntimeMap(IReadOnlyList<float> initialHeightMap, int sideLength)
+    {
+        return new SimpleMapUpdate(initialHeightMap, sideLength);
+    }
 
     public void GenerateHeightMap()
     {
@@ -32,7 +36,7 @@ public class TerrainGenerator : MonoBehaviour
         var numChunks = mapSize / chunksize;
         _chunks = new Chunk[numChunks * numChunks];
 
-        RuntimeMap = new RuntimeMap(_map, mapSize);
+        RuntimeMap = MakeNewRuntimeMap(_map, mapSize);
 
         for (var i = 0; i < transform.childCount; i++)
         {
@@ -79,7 +83,7 @@ public class TerrainGenerator : MonoBehaviour
         var numChunks = mapSize / chunksize;
         _chunks = new Chunk[numChunks * numChunks];
 
-        RuntimeMap = new RuntimeMap(_map, mapSize);
+        RuntimeMap = MakeNewRuntimeMap(_map, mapSize);
 
         for (var x = 0; x < numChunks; x++)
         {

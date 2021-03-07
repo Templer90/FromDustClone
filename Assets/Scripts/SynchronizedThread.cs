@@ -10,7 +10,7 @@ public class SynchronizedThread : MonoBehaviour
     public int lapses = 0;
 
     private Thread _thread;
-    private RuntimeMap _runtimeMap;
+    private IRuntimeMap _runtimeMap;
     public bool running;
     public bool pause;
 

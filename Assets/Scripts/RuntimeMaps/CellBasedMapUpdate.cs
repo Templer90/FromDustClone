@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 using Random = System.Random;
 
 
-public class RuntimeMap : IRuntimeMap
+public class CellBasedMapUpdate : IRuntimeMap
 {
     private Cell[] _map;
     private Cell[] _previousMap;
@@ -14,12 +14,12 @@ public class RuntimeMap : IRuntimeMap
     private readonly int _mapSize;
     private readonly int _mapSizeSquared;
 
-    public readonly PhysicData physic = new PhysicData();
+    public PhysicData physic { get; }
 
-    public RuntimeMap(IReadOnlyList<float> heightmap, int heightMapSize)
+    public CellBasedMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize)
     {
         Assert.AreEqual(heightmap.Count, (heightMapSize + 1) * (heightMapSize + 1));
-
+        physic = new PhysicData();
         _mapSize = heightMapSize;
         _mapSizeSquared = heightmap.Count;
 
@@ -159,19 +159,13 @@ public class RuntimeMap : IRuntimeMap
                 var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
                 var otherCell = _map[otherIndex];
 
-               // if ((prevCenterCell.Stone + prevCenterCell.Sand) > (otherCell.Stone + otherCell.Sand)) continue;
                 sandAcc += otherCell.Sand;
                 indices[foundAcc] = otherIndex;
                 foundAcc++;
             }
 
-            centerCell.Sand = (prevCenterCell.Sand + a * (sandAcc)) / (1 + foundAcc * a);
-            for (var i = 0; i < foundAcc; i++)
-            {
-                var otherCell = _map[indices[i]];
-                var previousOtherCell = _previousMap[indices[i]];
-                otherCell.Sand = previousOtherCell.Sand - a * (sandAcc / foundAcc) / (1 +  a);
-            }
+            var shiftedSand=(prevCenterCell.Sand + a * (sandAcc)) / (1 + foundAcc * a);
+            centerCell.Sand = shiftedSand;
         }
 
         void HandleSandDumb(Cell centerCell, Cell prevCenterCell, int x, int y)
@@ -189,7 +183,6 @@ public class RuntimeMap : IRuntimeMap
             }
         }
 
-
         for (var x = 1; x < _mapSize - 1; x++)
         {
             for (var y = 1; y < _mapSize - 1; y++)
@@ -199,7 +192,7 @@ public class RuntimeMap : IRuntimeMap
                 var prevCenterCell = _previousMap[y * _mapSize + x];
 
                 HandleSand(centerCell, prevCenterCell, x, y);
-                //HandleWater(centerCell, x, y);
+                HandleWater(centerCell, prevCenterCell,x, y);
             }
         }
 

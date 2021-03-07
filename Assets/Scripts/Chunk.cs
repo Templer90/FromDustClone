@@ -27,12 +27,12 @@ public class Chunk : MonoBehaviour
     };
 
     // Internal
-    private RuntimeMap _map;
+    private IRuntimeMap _map;
     private int _mainSize;
     private static readonly int MaxHeight = Shader.PropertyToID("_MaxHeight");
 
 
-    public void Initialize(int x, int y, RuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
+    public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
     {
         coords.x = x;
