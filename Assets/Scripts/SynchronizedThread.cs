@@ -16,7 +16,7 @@ public class SynchronizedThread : MonoBehaviour
 
     public void Start()
     {
-        _runtimeMap = gameObject.GetComponent<TerrainGenerator>().RuntimeMap;
+        _runtimeMap = gameObject.GetComponent<TerrainGenerator>().runtimeMap;
         running = false;
         _thread = new Thread(DoUpdate) {IsBackground = true};
     }

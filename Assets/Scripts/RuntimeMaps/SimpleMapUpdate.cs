@@ -16,10 +16,10 @@ public class SimpleMapUpdate : IRuntimeMap
 
     public PhysicData physic { get; }
 
-    public SimpleMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize)
+    public SimpleMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize, PhysicData physicData)
     {
         Assert.AreEqual(heightmap.Count, (heightMapSize + 1) * (heightMapSize + 1));
-        physic = new PhysicData();
+        physic = physicData;
         _mapSize = heightMapSize;
         _mapSizeSquared = heightmap.Count;
 

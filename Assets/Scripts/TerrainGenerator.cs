@@ -17,37 +17,30 @@ public class TerrainGenerator : MonoBehaviour
     public int erosionBrushRadius = 3;
 
     // Internal
-    public float[] _map;
+    [SerializeField]
+    private float[] stoneHeightMap;
     private Chunk[] _chunks;
-    public IRuntimeMap RuntimeMap;
-
-    private IRuntimeMap MakeNewRuntimeMap(IReadOnlyList<float> initialHeightMap, int sideLength)
-    {
-        return new SimpleMapUpdate(initialHeightMap, sideLength);
-    }
+    public IRuntimeMap runtimeMap;
 
     public void GenerateHeightMap()
     {
-        _map = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize + 1);
+        stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize + 1);
     }
 
     public void Start()
     {
         var numChunks = mapSize / chunksize;
         _chunks = new Chunk[numChunks * numChunks];
-
-        RuntimeMap = MakeNewRuntimeMap(_map, mapSize);
+        
+        runtimeMap = FindObjectOfType<RuntimeMapHolder>().MakeNewRuntimeMap(stoneHeightMap, mapSize);
 
         for (var i = 0; i < transform.childCount; i++)
         {
             var chunk = transform.GetChild(i).gameObject.GetComponent<Chunk>();
-            chunk.Initialize((int) chunk.coords.x, (int) chunk.coords.y, RuntimeMap, mapSize, chunksize, scale,
+            chunk.Initialize((int) chunk.coords.x, (int) chunk.coords.y, runtimeMap, mapSize, chunksize, scale,
                 elevationScale);
             _chunks[i] = chunk;
         }
-        
-        var holder = FindObjectOfType<RuntimeMapHolder>();
-        holder.Notify(this);
     }
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)
@@ -68,13 +61,13 @@ public class TerrainGenerator : MonoBehaviour
 
     public float getValueAt(int x, int y)
     {
-        return RuntimeMap.CellAt(x, y).WholeHeight;
+        return runtimeMap.CellAt(x, y).WholeHeight;
     }
 
     public void Add(int x, int y, Cell.Type type, float amount)
     {
-        if (!RuntimeMap.ValidCoord(x, y)) return;
-        RuntimeMap.Add(x, y, type, amount);
+        if (!runtimeMap.ValidCoord(x, y)) return;
+        runtimeMap.Add(x, y, type, amount);
     }
 
 
@@ -83,7 +76,7 @@ public class TerrainGenerator : MonoBehaviour
         var numChunks = mapSize / chunksize;
         _chunks = new Chunk[numChunks * numChunks];
 
-        RuntimeMap = MakeNewRuntimeMap(_map, mapSize);
+        runtimeMap = FindObjectOfType<RuntimeMapHolder>().MakeNewRuntimeMap(stoneHeightMap, mapSize);
 
         for (var x = 0; x < numChunks; x++)
         {
@@ -96,7 +89,7 @@ public class TerrainGenerator : MonoBehaviour
 
                 var chunk = child.GetComponent<Chunk>();
                 _chunks[y * numChunks + x] = chunk;
-                chunk.Initialize(x, y, RuntimeMap, mapSize, chunksize, scale, elevationScale);
+                chunk.Initialize(x, y, runtimeMap, mapSize, chunksize, scale, elevationScale);
             }
         }
 

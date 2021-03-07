@@ -16,10 +16,10 @@ public class CellBasedMapUpdate : IRuntimeMap
 
     public PhysicData physic { get; }
 
-    public CellBasedMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize)
+    public CellBasedMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize, PhysicData physicData)
     {
         Assert.AreEqual(heightmap.Count, (heightMapSize + 1) * (heightMapSize + 1));
-        physic = new PhysicData();
+        physic = physicData;
         _mapSize = heightMapSize;
         _mapSizeSquared = heightmap.Count;
 
