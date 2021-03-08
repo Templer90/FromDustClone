@@ -15,12 +15,12 @@ public class TerrainGenerator : MonoBehaviour
     [Header("Erosion Settings")] public ComputeShader erosion;
     public int numErosionIterations = 50000;
     public int erosionBrushRadius = 3;
+    public IRuntimeMap runtimeMap;
 
     // Internal
-    [SerializeField]
-    private float[] stoneHeightMap;
+    [SerializeField] private float[] stoneHeightMap;
     private Chunk[] _chunks;
-    public IRuntimeMap runtimeMap;
+    private Camera _cam;
 
     public void GenerateHeightMap()
     {
@@ -31,7 +31,7 @@ public class TerrainGenerator : MonoBehaviour
     {
         var numChunks = mapSize / chunksize;
         _chunks = new Chunk[numChunks * numChunks];
-        
+
         runtimeMap = FindObjectOfType<RuntimeMapHolder>().MakeNewRuntimeMap(stoneHeightMap, mapSize);
 
         for (var i = 0; i < transform.childCount; i++)
@@ -41,6 +41,8 @@ public class TerrainGenerator : MonoBehaviour
                 elevationScale);
             _chunks[i] = chunk;
         }
+
+        _cam = Camera.main;
     }
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)
@@ -82,11 +84,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for (var y = 0; y < numChunks; y++)
             {
-                var pos = new Vector3(x * scale, 0, y * scale);
                 var child = Instantiate(chunkPrefab, transform);
-                child.name = "Chunk(" + x + "," + y + ")";
-                child.transform.position = pos;
-
                 var chunk = child.GetComponent<Chunk>();
                 _chunks[y * numChunks + x] = chunk;
                 chunk.Initialize(x, y, runtimeMap, mapSize, chunksize, scale, elevationScale);
@@ -101,9 +99,18 @@ public class TerrainGenerator : MonoBehaviour
 
     public void Update()
     {
+        var planes = GeometryUtility.CalculateFrustumPlanes(_cam);
         foreach (var chunk in _chunks)
         {
-            chunk.UpdateMeshes();
+            if (GeometryUtility.TestPlanesAABB(planes, chunk.Bounds))
+            {
+                chunk.gameObject.SetActive(true);
+                chunk.UpdateMeshes();
+            }
+            else
+            {
+                chunk.gameObject.SetActive(false);
+            }
         }
     }
 

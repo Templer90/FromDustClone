@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 public class Chunk : MonoBehaviour
@@ -7,6 +8,7 @@ public class Chunk : MonoBehaviour
     public int mapSize = 0;
     public float scale = 0;
     public float elevationScale = 10;
+    public Bounds Bounds;
 
     [Serializable]
     public class MeshData
@@ -35,6 +37,14 @@ public class Chunk : MonoBehaviour
     public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
     {
+        var pos = new Vector3(x * scale, 0, y * scale);
+        var halfScale = scale / 2.0f;
+        var transform1 = transform;
+        transform1.name = "Chunk(" + x + "," + y + ")";
+        transform1.position = pos;
+
+        Bounds = new Bounds(pos+new Vector3(halfScale,0,halfScale), new Vector3(halfScale,100,halfScale));
+        
         coords.x = x;
         coords.y = y;
         _map = mainMap;

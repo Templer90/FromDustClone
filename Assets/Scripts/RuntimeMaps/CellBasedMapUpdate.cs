@@ -148,8 +148,7 @@ public class CellBasedMapUpdate : IRuntimeMap
             var hdiff=currentTotalHeight-lowest;
             var w = centerCell.Water;
 
-
-            var ratio=0.5f;
+            
             if (centerCell.Stone > lowest)
             {
                 //splash randomly?
@@ -159,6 +158,7 @@ public class CellBasedMapUpdate : IRuntimeMap
             }
             else
             {
+                var ratio=0.5f;
                 centerCell.Water -= hdiff * ratio;
                 smallerCell.Water += hdiff * (1.0f - ratio);
             }
