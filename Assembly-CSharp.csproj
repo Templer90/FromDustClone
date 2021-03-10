@@ -66,6 +66,7 @@
      <Compile Include="Assets\RuntimeMapHolder.cs" />
      <Compile Include="Assets\Scripts\RuntimeMaps\IRuntimeMap.cs" />
      <Compile Include="Assets\Scripts\RuntimeMaps\CellBasedMapUpdate.cs" />
+     <Compile Include="Assets\RTS_Camera\Scripts\RTS_Camera.cs" />
      <None Include="Assets\Scripts\ComputeShaders\HeightMap.compute" />
  <Reference Include="UnityEngine">
  <HintPath>/home/eric/Unity/Hub/Editor/2020.2.2f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>

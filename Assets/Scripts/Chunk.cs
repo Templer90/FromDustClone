@@ -1,10 +1,11 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Chunk : MonoBehaviour
 {
-    [Header("Mesh Settings")] public Vector2 coords = new Vector2(0, 0);
+    [Header("Mesh Settings")] public Vector2Int coords = new Vector2Int(0, 0);
     public int mapSize = 0;
     public float scale = 0;
     public float elevationScale = 10;
@@ -16,7 +17,8 @@ public class Chunk : MonoBehaviour
         public Cell.Type Type { get; protected internal set; }
         public GameObject holder;
 
-        [NonSerialized] public MeshRenderer meshRenderer;
+        [NonSerialized] public Vector3[] vertices;
+        [NonSerialized] public Color[] color;
         [NonSerialized] public MeshFilter meshFilter;
     }
 
@@ -43,8 +45,8 @@ public class Chunk : MonoBehaviour
         transform1.name = "Chunk(" + x + "," + y + ")";
         transform1.position = pos;
 
-        Bounds = new Bounds(pos+new Vector3(halfScale,0,halfScale), new Vector3(halfScale,100,halfScale));
-        
+        Bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 100, halfScale));
+
         coords.x = x;
         coords.y = y;
         _map = mainMap;
@@ -68,6 +70,14 @@ public class Chunk : MonoBehaviour
     {
         AssignMeshComponents(meshes[(int) Cell.Type.Stone]);
         AssignMeshComponents(meshes[(int) Cell.Type.Water]);
+
+        var meshStone = meshes[(int) Cell.Type.Stone].meshFilter.mesh;
+        meshes[(int) Cell.Type.Stone].vertices = meshStone.vertices;
+        meshes[(int) Cell.Type.Stone].color = meshStone.colors;
+
+        var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
+        meshes[(int) Cell.Type.Water].vertices = meshWater.vertices;
+        meshes[(int) Cell.Type.Water].color = meshWater.colors;
     }
 
     public void ConstructMeshes()
@@ -78,72 +88,56 @@ public class Chunk : MonoBehaviour
 
     public void UpdateMeshes()
     {
-        UpdateMesh(meshes[(int) Cell.Type.Stone]);
-        UpdateMesh(meshes[(int) Cell.Type.Water]);
-    }
-
-    private void UpdateMesh(MeshData meshData)
-    {
         if (!gameObject.activeSelf) return;
 
         var numChunks = (_mainSize / mapSize);
-        var xSize = mapSize + (((int) coords.x < numChunks) ? 1 : 0);
-        var ySize = mapSize + (((int) coords.y < numChunks) ? 1 : 0);
+        var xSize = mapSize + ((coords.x < numChunks) ? 1 : 0);
+        var ySize = mapSize + ((coords.y < numChunks) ? 1 : 0);
         var maxSize = mapSize + 1;
 
-        var mesh1 = meshData.meshFilter.mesh;
-        var verts = mesh1.vertices;
-        var color = mesh1.colors;
-
-        void StoneUpdate(int x, int y, int meshMapIndex)
-        {
-            var stone = GETVal(x, y, Cell.Type.Stone);
-            var sand = GETVal(x, y, Cell.Type.Sand);
-
-            color[meshMapIndex].r = sand;
-            verts[meshMapIndex].y = (stone +sand)* elevationScale;
-        }
-
-        void WaterUpdate(int x, int y, int meshMapIndex)
-        {
-            var water = GETVal(x, y, Cell.Type.Water);
-            if (water < 0.0001f)
-            {
-                verts[meshMapIndex].y = 0;
-            }
-            else
-            {
-                verts[meshMapIndex].y = (GETVal(x, y, Cell.Type.Stone) + water) * elevationScale;
-            }
-        }
-
-        Action<int, int, int> updateFunc;
-        if (meshData.Type == Cell.Type.Water)
-        {
-            updateFunc = WaterUpdate;
-        }
-        else
-        {
-            updateFunc = StoneUpdate;
-        }
+        var offsetX = coords.x * mapSize;
+        var offsetY = coords.y * mapSize;
 
         for (var x = 0; x < xSize; x++)
         {
             for (var y = 0; y < ySize; y++)
             {
                 var meshMapIndex = y * maxSize + x;
-                updateFunc(x, y, meshMapIndex);
+                var currentCell = _map.CellAt(offsetX + x, offsetY + y);
+
+                var stone = currentCell.Stone;
+                var sand = currentCell.Sand;
+                var water = currentCell.Water;
+
+                meshes[(int) Cell.Type.Stone].color[meshMapIndex].r = sand;
+                meshes[(int) Cell.Type.Stone].vertices[meshMapIndex].y = (stone + sand) * elevationScale;
+                
+                
+                meshes[(int) Cell.Type.Water].color[meshMapIndex].r = water;
+                if (water < 0.0001f)
+                {
+                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = 0;
+                }
+                else
+                {
+                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = (stone + sand + water) * elevationScale;
+                }
             }
         }
 
-        var mesh = meshData.meshFilter.mesh;
-        mesh.vertices = verts;
-        mesh.colors = color;
-        //mesh.RecalculateNormals();
-        //mesh.normals = CalculateNormals(verts, mesh.triangles);
+        var meshStone = meshes[(int) Cell.Type.Stone].meshFilter.mesh;
+        meshStone.vertices = meshes[(int) Cell.Type.Stone].vertices;
+        meshStone.colors = meshes[(int) Cell.Type.Stone].color;
+
+        var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
+        meshWater.vertices = meshes[(int) Cell.Type.Water].vertices;
+        meshWater.colors = meshes[(int) Cell.Type.Water].color;
+        
+        meshStone.RecalculateNormals();
+        //meshStone.normals = CalculateNormals(verts, mesh.triangles);
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float GETVal(int x, int y, Cell.Type type)
     {
         return _map.ValueAt((int) coords.x * mapSize + x, (int) coords.y * mapSize + y, type);
@@ -208,7 +202,6 @@ public class Chunk : MonoBehaviour
             meshHolder.gameObject.AddComponent<MeshRenderer>();
         }
 
-        meshData.meshRenderer = meshHolder.GetComponent<MeshRenderer>();
         meshData.meshFilter = meshHolder.GetComponent<MeshFilter>();
     }
 }

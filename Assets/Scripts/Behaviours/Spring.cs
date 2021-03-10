@@ -10,12 +10,12 @@ public class Spring : MonoBehaviour
     public Cell.Type type = Cell.Type.Water;
     public Vector2Int mapCoordinates;
 
-    private TerrainGenerator _terrainGenerator;
+    private RuntimeMapHolder _terrainGenerator;
 
     // Start is called before the first frame update
     public void Start()
     {
-        _terrainGenerator = FindObjectOfType<TerrainGenerator>();
+        _terrainGenerator = FindObjectOfType<RuntimeMapHolder>();
     }
 
     // Update is called once per frame

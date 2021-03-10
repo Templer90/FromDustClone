@@ -9,6 +9,8 @@ public class PhysicData
     public float SandStiffness = 0.001f;
     public float SandViscosity = 0.0000001f;
     public float Sand_dt = 0.2f;
+    public float SandCreationHeight = 0.1f;
+    public float SandCreationSpeed = 0.0001f;
 
     [Range(0.0f,1.0f)]
     public float SandSlopeRatio = 0.5f;
@@ -16,6 +18,8 @@ public class PhysicData
     [Header("Water Settings")]
     public float WaterViscosity = 0.01f;
     public float EvaporationThreshold = 0.0001f;
+    public float WaterSplashRatio = 0.1f;
+
 
     public Kernels UsedKernel = Kernels.VonNeumann;
 

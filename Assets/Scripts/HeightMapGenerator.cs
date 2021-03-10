@@ -15,14 +15,10 @@ public class HeightMapGenerator : MonoBehaviour
 
     public float[] GenerateHeightMap(int mapSize)
     {
-        if (useComputeShader)
-        {
-            //return GenerateHeightMapGPU (mapSize);
-        }
-
         return GenerateHeightMapCPU(mapSize);
     }
 
+    /*
     float[] GenerateHeightMapGPU(int mapSize)
     {
         var prng = new System.Random(seed);
@@ -74,7 +70,9 @@ public class HeightMapGenerator : MonoBehaviour
 
         return map;
     }
+    */
 
+    
     float[] GenerateHeightMapCPU(int mapSize)
     {
         var map = new float[mapSize * mapSize];

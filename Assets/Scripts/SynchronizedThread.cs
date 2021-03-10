@@ -16,7 +16,7 @@ public class SynchronizedThread : MonoBehaviour
 
     public void Start()
     {
-        _runtimeMap = gameObject.GetComponent<TerrainGenerator>().runtimeMap;
+        _runtimeMap = gameObject.GetComponent<RuntimeMapHolder>().runtimeMap;
         running = false;
         _thread = new Thread(DoUpdate) {IsBackground = true};
     }
@@ -31,6 +31,7 @@ public class SynchronizedThread : MonoBehaviour
     private void DoUpdate()
     {
         var watch = System.Diagnostics.Stopwatch.StartNew();
+        watch.Start();
         while (!pause)
         {
             watch.Reset();

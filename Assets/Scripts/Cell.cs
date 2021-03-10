@@ -6,6 +6,7 @@ public class Cell
     public float Lava;
     
     public float WholeHeight => Stone+Sand+Water+Lava;
+    public float LithoHeight => Stone+Sand;
 
     public enum Type
     {

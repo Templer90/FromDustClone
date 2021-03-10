@@ -12,73 +12,53 @@ public class TerrainGenerator : MonoBehaviour
     public float elevationScale = 10;
     public GameObject chunkPrefab;
 
-    [Header("Erosion Settings")] public ComputeShader erosion;
+    [Header("Erosion Settings")] [Range(0, 1)]
+    public float waterTableHeight = 0.1f;
+
+    public ComputeShader erosion;
     public int numErosionIterations = 50000;
     public int erosionBrushRadius = 3;
-    public IRuntimeMap runtimeMap;
 
     // Internal
     [SerializeField] private float[] stoneHeightMap;
-    private Chunk[] _chunks;
-    private Camera _cam;
+    [SerializeField] private float[] waterHeightMap;
 
     public void GenerateHeightMap()
     {
         stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize + 1);
+        waterHeightMap = new float [stoneHeightMap.Length];
+        for (var i = 0; i < waterHeightMap.Length; i++)
+        {
+            waterHeightMap[i] = (waterTableHeight > stoneHeightMap[i]) ? waterTableHeight : 0;
+        }
     }
 
     public void Start()
     {
         var numChunks = mapSize / chunksize;
-        _chunks = new Chunk[numChunks * numChunks];
+        var chunks = new Chunk[numChunks * numChunks];
 
-        runtimeMap = FindObjectOfType<RuntimeMapHolder>().MakeNewRuntimeMap(stoneHeightMap, mapSize);
+        var runtimeMap = FindObjectOfType<RuntimeMapHolder>()
+            .MakeNewRuntimeMap(mapSize, stoneHeightMap, waterHeightMap);
 
         for (var i = 0; i < transform.childCount; i++)
         {
             var chunk = transform.GetChild(i).gameObject.GetComponent<Chunk>();
-            chunk.Initialize((int) chunk.coords.x, (int) chunk.coords.y, runtimeMap, mapSize, chunksize, scale,
+            chunk.Initialize(chunk.coords.x, chunk.coords.y, runtimeMap, mapSize, chunksize, scale,
                 elevationScale);
-            _chunks[i] = chunk;
+            chunks[i] = chunk;
         }
 
-        _cam = Camera.main;
+        FindObjectOfType<RuntimeMapHolder>().Initialize(Camera.main, mapSize, chunksize, scale, chunks, runtimeMap);
     }
-
-    public Vector2Int WorldCoordinatesToCell(Vector3 world)
-    {
-        var ret = new Vector2Int(0, 0);
-        world.y = 0;
-        ret.x = (int) ((world.x * chunksize / (scale)));
-        ret.y = (int) ((world.z * chunksize / (scale)));
-
-        if (ret.x > mapSize) ret.x = mapSize;
-        if (ret.x <= 0) ret.x = 0;
-
-        if (ret.y > mapSize) ret.y = mapSize;
-        if (ret.y <= 0) ret.y = 0;
-
-        return ret;
-    }
-
-    public float getValueAt(int x, int y)
-    {
-        return runtimeMap.CellAt(x, y).WholeHeight;
-    }
-
-    public void Add(int x, int y, Cell.Type type, float amount)
-    {
-        if (!runtimeMap.ValidCoord(x, y)) return;
-        runtimeMap.Add(x, y, type, amount);
-    }
-
 
     public void ConstructMesh()
     {
         var numChunks = mapSize / chunksize;
-        _chunks = new Chunk[numChunks * numChunks];
+        var chunks = new Chunk[numChunks * numChunks];
 
-        runtimeMap = FindObjectOfType<RuntimeMapHolder>().MakeNewRuntimeMap(stoneHeightMap, mapSize);
+        var runtimeMap = FindObjectOfType<RuntimeMapHolder>()
+            .MakeNewRuntimeMap(mapSize, stoneHeightMap, waterHeightMap);
 
         for (var x = 0; x < numChunks; x++)
         {
@@ -86,31 +66,14 @@ public class TerrainGenerator : MonoBehaviour
             {
                 var child = Instantiate(chunkPrefab, transform);
                 var chunk = child.GetComponent<Chunk>();
-                _chunks[y * numChunks + x] = chunk;
+                chunks[y * numChunks + x] = chunk;
                 chunk.Initialize(x, y, runtimeMap, mapSize, chunksize, scale, elevationScale);
             }
         }
 
-        foreach (var chunk in _chunks)
+        foreach (var chunk in chunks)
         {
             chunk.ConstructMeshes();
-        }
-    }
-
-    public void Update()
-    {
-        var planes = GeometryUtility.CalculateFrustumPlanes(_cam);
-        foreach (var chunk in _chunks)
-        {
-            if (GeometryUtility.TestPlanesAABB(planes, chunk.Bounds))
-            {
-                chunk.gameObject.SetActive(true);
-                chunk.UpdateMeshes();
-            }
-            else
-            {
-                chunk.gameObject.SetActive(false);
-            }
         }
     }
 

@@ -16,19 +16,22 @@ public class SimpleMapUpdate : IRuntimeMap
 
     public PhysicData physic { get; }
 
-    public SimpleMapUpdate(IReadOnlyList<float> heightmap, int heightMapSize, PhysicData physicData)
+    public SimpleMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
+        IReadOnlyList<float> waterMap)
     {
-        Assert.AreEqual(heightmap.Count, (heightMapSize + 1) * (heightMapSize + 1));
+        Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
+        Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
+        
         physic = physicData;
         _mapSize = heightMapSize;
-        _mapSizeSquared = heightmap.Count;
+        _mapSizeSquared = stoneHeightMap.Count;
 
-        _map = new Cell[heightmap.Count];
-        _previousMap = new Cell[heightmap.Count];
-        for (var i = 0; i < heightmap.Count; i++)
+        _map = new Cell[stoneHeightMap.Count];
+        _previousMap = new Cell[stoneHeightMap.Count];
+        for (var i = 0; i < stoneHeightMap.Count; i++)
         {
-            _map[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f, Lava = 0f};
-            _previousMap[i] = new Cell {Stone = heightmap[i], Water = 0f, Sand = 0f, Lava = 0f};
+            _map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
+            _previousMap[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
         }
     }
 
@@ -164,7 +167,7 @@ public class SimpleMapUpdate : IRuntimeMap
                 foundAcc++;
             }
 
-            var shiftedSand=(prevCenterCell.Sand + a * (sandAcc)) / (1 + foundAcc * a);
+            var shiftedSand = (prevCenterCell.Sand + a * (sandAcc)) / (1 + foundAcc * a);
             centerCell.Sand = shiftedSand;
         }
 
@@ -192,7 +195,7 @@ public class SimpleMapUpdate : IRuntimeMap
                 var prevCenterCell = _previousMap[y * _mapSize + x];
 
                 HandleSand(centerCell, prevCenterCell, x, y);
-                HandleWater(centerCell, prevCenterCell,x, y);
+                HandleWater(centerCell, prevCenterCell, x, y);
             }
         }
 

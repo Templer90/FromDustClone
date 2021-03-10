@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO.MemoryMappedFiles;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -12,12 +13,12 @@ public class Cursor : MonoBehaviour
     public Cell.Type type = Cell.Type.Water;
 
     private Camera _cam;
-    private TerrainGenerator _terrainGenerator;
+    private RuntimeMapHolder _terrainGenerator;
 
     public void Start()
     {
         _cam = Camera.main;
-        _terrainGenerator = FindObjectOfType<TerrainGenerator>();
+        _terrainGenerator = FindObjectOfType<RuntimeMapHolder>();
     }
 
     public void OnGUI()
@@ -33,24 +34,16 @@ public class Cursor : MonoBehaviour
         worldPosition = hit.point;
         test = _terrainGenerator.WorldCoordinatesToCell(hit.point);
         
-        worldPosition.y = _terrainGenerator.getValueAt(test.x, test.y) * _terrainGenerator.elevationScale;
-        worldPosition.x = test.x * _terrainGenerator.scale;
-        worldPosition.z = test.y *_terrainGenerator.scale;
-
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0)||Input.GetMouseButton(1))
         {
+            var quantity = amount* (Input.GetMouseButton(0)?1:Input.GetMouseButton(1)?-1:0);
             for (var x = -2; x < 1; x++)
             {
                 for (var y = -2; y < 1; y++)
                 {
-                    _terrainGenerator.Add(test.x + x, test.y + y, type, amount);
+                    _terrainGenerator.Add(test.x + x, test.y + y, type, quantity);
                 }
             }
         }
-    }
-
-    // Update is called once per frame
-    public void Update()
-    {
     }
 }
