@@ -7,5 +7,5 @@ public interface IRuntimeMap
     void Add(int x, int y, Cell.Type type, float amount);
     void SimpleSmooth();
     void MapUpdate();
-    PhysicData physic { get; }
+    PhysicData Physic { get; }
 }

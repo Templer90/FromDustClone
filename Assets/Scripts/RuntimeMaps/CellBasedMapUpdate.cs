@@ -14,7 +14,7 @@ public class CellBasedMapUpdate : IRuntimeMap
     private readonly int _mapSize;
     private readonly int _mapSizeSquared;
 
-    public PhysicData physic { get; }
+    public PhysicData Physic { get; }
 
     public CellBasedMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
         IReadOnlyList<float> waterMap)
@@ -22,7 +22,7 @@ public class CellBasedMapUpdate : IRuntimeMap
         Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
         Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
         
-        physic = physicData;
+        Physic = physicData;
         _mapSize = heightMapSize;
         _mapSizeSquared = stoneHeightMap.Count;
 
@@ -118,8 +118,8 @@ public class CellBasedMapUpdate : IRuntimeMap
 
     public void MapUpdate()
     {
-        var kernel = physic.GETKernel();
-        var a = physic.Sand_dt * physic.SandViscosity * _mapSizeSquared;
+        var kernel = Physic.GETKernel();
+        var a = Physic.Sand_dt * Physic.SandViscosity * _mapSizeSquared;
 
         void HandleWater(Cell centerCell, int x, int y)
         {
@@ -158,13 +158,13 @@ public class CellBasedMapUpdate : IRuntimeMap
             if (centerCell.LithoHeight > lowest)
             {
                 //splash randomly?
-                centerCell.Water = w * physic.WaterSplashRatio;
-                smallerCell.Water += w * (1.0f - physic.WaterSplashRatio);
+                centerCell.Water = w * Physic.WaterSplashRatio;
+                smallerCell.Water += w * (1.0f - Physic.WaterSplashRatio);
             }
             else
             {
-                centerCell.Water -= hdiff * physic.WaterViscosity;
-                smallerCell.Water += hdiff * ( /*1.0f - */ physic.WaterViscosity);
+                centerCell.Water -= hdiff * Physic.WaterViscosity;
+                smallerCell.Water += hdiff * ( /*1.0f - */ Physic.WaterViscosity);
             }
 
             //Coded for water
@@ -185,7 +185,7 @@ public class CellBasedMapUpdate : IRuntimeMap
                 return;
             }
 
-            if (centerCell.Sand < physic.SandStiffness) return;
+            if (centerCell.Sand < Physic.SandStiffness) return;
 
             var currentTotalHeight = centerCell.Stone + centerCell.Sand;
             var lowest = currentTotalHeight;
@@ -214,7 +214,7 @@ public class CellBasedMapUpdate : IRuntimeMap
             var w = centerCell.Sand;
 
 
-            var ratio = physic.SandSlopeRatio;
+            var ratio = Physic.SandSlopeRatio;
             if ((centerCell.Sand) > lowest)
             {
                 //splash randomly?

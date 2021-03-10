@@ -14,7 +14,7 @@ public class SimpleMapUpdate : IRuntimeMap
     private readonly int _mapSize;
     private readonly int _mapSizeSquared;
 
-    public PhysicData physic { get; }
+    public PhysicData Physic { get; }
 
     public SimpleMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
         IReadOnlyList<float> waterMap)
@@ -22,7 +22,7 @@ public class SimpleMapUpdate : IRuntimeMap
         Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
         Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
         
-        physic = physicData;
+        Physic = physicData;
         _mapSize = heightMapSize;
         _mapSizeSquared = stoneHeightMap.Count;
 
@@ -124,8 +124,8 @@ public class SimpleMapUpdate : IRuntimeMap
 
     public void MapUpdate()
     {
-        var kernel = physic.GETKernel();
-        var a = physic.Sand_dt * physic.SandViscosity * _mapSizeSquared;
+        var kernel = Physic.GETKernel();
+        var a = Physic.Sand_dt * Physic.SandViscosity * _mapSizeSquared;
 
         void HandleWater(Cell centerCell, Cell prevCenterCell, int x, int y)
         {
@@ -134,7 +134,7 @@ public class SimpleMapUpdate : IRuntimeMap
                 var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
                 var otherCell = _map[otherIndex];
 
-                if (centerCell.Water < physic.EvaporationThreshold)
+                if (centerCell.Water < Physic.EvaporationThreshold)
                 {
                     centerCell.Water = 0;
                     continue;
@@ -145,14 +145,14 @@ public class SimpleMapUpdate : IRuntimeMap
                 if (otherCell.Stone > waterHeight) continue;
                 if (otherWaterHeight > waterHeight) continue;
                 var waterDiff = waterHeight - otherWaterHeight;
-                centerCell.Water -= waterDiff / 2 * physic.WaterViscosity;
-                otherCell.Water += waterDiff / 2 * physic.WaterViscosity;
+                centerCell.Water -= waterDiff / 2 * Physic.WaterViscosity;
+                otherCell.Water += waterDiff / 2 * Physic.WaterViscosity;
             }
         }
 
         void HandleSand(Cell centerCell, Cell prevCenterCell, int x, int y)
         {
-            if (centerCell.Sand < physic.SandStiffness) return;
+            if (centerCell.Sand < Physic.SandStiffness) return;
 
             var sandAcc = 0.0f;
             var foundAcc = 0;
@@ -173,13 +173,13 @@ public class SimpleMapUpdate : IRuntimeMap
 
         void HandleSandDumb(Cell centerCell, Cell prevCenterCell, int x, int y)
         {
-            if (centerCell.Sand < physic.SandStiffness) return;
+            if (centerCell.Sand < Physic.SandStiffness) return;
             for (var i = 0; i < kernel.Length; i++)
             {
                 var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
                 var otherCell = _map[otherIndex];
                 var sandDiff = (centerCell.Stone + centerCell.Sand) - (otherCell.Stone + otherCell.Sand);
-                var delta = sandDiff * physic.SandHardness;
+                var delta = sandDiff * Physic.SandHardness;
 
                 centerCell.Sand -= delta;
                 otherCell.Sand += delta;
