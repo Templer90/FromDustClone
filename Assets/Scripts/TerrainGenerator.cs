@@ -10,6 +10,7 @@ public class TerrainGenerator : MonoBehaviour
     public int chunksize = 10;
     public float scale = 20;
     public float elevationScale = 10;
+    public float stoneHeightScale = 10;
     public GameObject chunkPrefab;
 
     [Header("Erosion Settings")] [Range(0, 1)]

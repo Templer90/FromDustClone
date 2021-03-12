@@ -24,18 +24,25 @@ public class RuntimeMapHolder : MonoBehaviour
         Simple,
         CellBased
     }
-
-    public IRuntimeMap MakeNewRuntimeMap(int sideLength,IReadOnlyList<float> initialStoneHeightMap, IReadOnlyList<float> initialWaterMap)
+    
+    public IRuntimeMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
+        IReadOnlyList<float> initialWaterMap)
     {
+        IRuntimeMap newMapUpdate;
         switch (mapType)
         {
             case MapTypes.Simple:
-                return new SimpleMapUpdate(sideLength, data,initialStoneHeightMap, initialWaterMap);
+                newMapUpdate = new SimpleMapUpdate(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                break;
             case MapTypes.CellBased:
-                return new CellBasedMapUpdate(sideLength, data,initialStoneHeightMap, initialWaterMap);
+                newMapUpdate = new CellBasedMapUpdate(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        data = newMapUpdate.Physic;
+        return newMapUpdate;
     }
 
 
@@ -49,7 +56,7 @@ public class RuntimeMapHolder : MonoBehaviour
         if (!runtimeMap.ValidCoord(x, y)) return;
         runtimeMap.Add(x, y, type, amount);
     }
-    
+
     public void Update()
     {
         _counter += Time.deltaTime;

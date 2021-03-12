@@ -13,12 +13,12 @@ public class Cursor : MonoBehaviour
     public Cell.Type type = Cell.Type.Water;
 
     private Camera _cam;
-    private RuntimeMapHolder _terrainGenerator;
+    private RuntimeMapHolder _runtimeMap;
 
     public void Start()
     {
         _cam = Camera.main;
-        _terrainGenerator = FindObjectOfType<RuntimeMapHolder>();
+        _runtimeMap = FindObjectOfType<RuntimeMapHolder>();
     }
 
     public void OnGUI()
@@ -32,7 +32,7 @@ public class Cursor : MonoBehaviour
             return;
 
         worldPosition = hit.point;
-        test = _terrainGenerator.WorldCoordinatesToCell(hit.point);
+        test = _runtimeMap.WorldCoordinatesToCell(hit.point);
         
         if (Input.GetMouseButton(0)||Input.GetMouseButton(1))
         {
@@ -41,7 +41,7 @@ public class Cursor : MonoBehaviour
             {
                 for (var y = -2; y < 1; y++)
                 {
-                    _terrainGenerator.Add(test.x + x, test.y + y, type, quantity);
+                    _runtimeMap.Add(test.x + x, test.y + y, type, quantity);
                 }
             }
         }

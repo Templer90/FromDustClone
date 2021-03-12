@@ -4,6 +4,9 @@ using UnityEngine;
 [Serializable]
 public class PhysicData
 {
+    [Header("Stone Settings")]
+    public float StoneHardness = 1f;
+    
     [Header("Sand Settings")]
     public float SandHardness = 1f;
     public float SandStiffness = 0.001f;

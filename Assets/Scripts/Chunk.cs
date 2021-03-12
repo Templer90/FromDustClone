@@ -10,6 +10,51 @@ public class Chunk : MonoBehaviour
     public float scale = 0;
     public float elevationScale = 10;
     public Bounds Bounds;
+    public LODTriangles.LOD LOD = LODTriangles.LOD.LOD1;
+
+
+    [Serializable]
+    public class LODTriangles
+    {
+        public enum LOD
+        {
+            LOD1,
+            LOD2
+        };
+
+        public int[] _LOD1triangles;
+        public int[] _LOD2triangles;
+        private LOD oldLOD = LOD.LOD1;
+
+        public LODTriangles(int[] lod1, int[] lod2)
+        {
+            _LOD1triangles = new int[lod1.Length];
+            lod1.CopyTo(_LOD1triangles, 0);
+            _LOD2triangles = new int[lod2.Length];
+            lod2.CopyTo(_LOD2triangles, 0);
+        }
+
+        public void SwitchTriangles(Mesh mesh, LOD LOD)
+        {
+            if (LOD == oldLOD) return;
+            switch (LOD)
+            {
+                case LOD.LOD1:
+                    mesh.triangles = _LOD1triangles;
+                    mesh.RecalculateBounds();
+                    break;
+                case LOD.LOD2:
+                    mesh.triangles = _LOD2triangles;
+                    mesh.RecalculateBounds();
+                    break;
+                default:
+                    mesh.triangles = mesh.triangles;
+                    break;
+            }
+
+            oldLOD = LOD;
+        }
+    }
 
     [Serializable]
     public class MeshData
@@ -17,6 +62,7 @@ public class Chunk : MonoBehaviour
         public Cell.Type Type { get; protected internal set; }
         public GameObject holder;
 
+        public LODTriangles lod;
         [NonSerialized] public Vector3[] vertices;
         [NonSerialized] public Color[] color;
         [NonSerialized] public MeshFilter meshFilter;
@@ -33,7 +79,6 @@ public class Chunk : MonoBehaviour
     // Internal
     private IRuntimeMap _map;
     private int _mainSize;
-    private static readonly int MaxHeight = Shader.PropertyToID("_MaxHeight");
 
 
     public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
@@ -82,13 +127,16 @@ public class Chunk : MonoBehaviour
 
     public void ConstructMeshes()
     {
-        ConstructMesh(meshes[(int) Cell.Type.Stone]);
-        ConstructMesh(meshes[(int) Cell.Type.Water]);
+        ConstructMesh_Internal(meshes[(int) Cell.Type.Stone]);
+        ConstructMesh_Internal(meshes[(int) Cell.Type.Water]);
     }
 
     public void UpdateMeshes()
     {
         if (!gameObject.activeSelf) return;
+
+        meshes[(int) Cell.Type.Stone].lod
+            .SwitchTriangles(meshes[(int) Cell.Type.Stone].meshFilter.mesh, LOD);
 
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + ((coords.x < numChunks) ? 1 : 0);
@@ -98,9 +146,11 @@ public class Chunk : MonoBehaviour
         var offsetX = coords.x * mapSize;
         var offsetY = coords.y * mapSize;
 
-        for (var x = 0; x < xSize; x++)
+
+        var step = LOD == LODTriangles.LOD.LOD1 ? 1 : 2;
+        for (var x = 0; x < xSize; x += step)
         {
-            for (var y = 0; y < ySize; y++)
+            for (var y = 0; y < ySize; y += step)
             {
                 var meshMapIndex = y * maxSize + x;
                 var currentCell = _map.CellAt(offsetX + x, offsetY + y);
@@ -111,8 +161,8 @@ public class Chunk : MonoBehaviour
 
                 meshes[(int) Cell.Type.Stone].color[meshMapIndex].r = sand;
                 meshes[(int) Cell.Type.Stone].vertices[meshMapIndex].y = (stone + sand) * elevationScale;
-                
-                
+
+
                 meshes[(int) Cell.Type.Water].color[meshMapIndex].r = water;
                 if (water < 0.0001f)
                 {
@@ -132,8 +182,8 @@ public class Chunk : MonoBehaviour
         var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
         meshWater.vertices = meshes[(int) Cell.Type.Water].vertices;
         meshWater.colors = meshes[(int) Cell.Type.Water].color;
-        
-        meshStone.RecalculateNormals();
+
+        //meshStone.RecalculateNormals();
         //meshStone.normals = CalculateNormals(verts, mesh.triangles);
     }
 
@@ -141,11 +191,6 @@ public class Chunk : MonoBehaviour
     private float GETVal(int x, int y, Cell.Type type)
     {
         return _map.ValueAt((int) coords.x * mapSize + x, (int) coords.y * mapSize + y, type);
-    }
-
-    private void ConstructMesh(MeshData meshData)
-    {
-        ConstructMesh_Internal(meshData);
     }
 
     private void ConstructMesh_Internal(MeshData meshData)
@@ -165,12 +210,13 @@ public class Chunk : MonoBehaviour
             }
         }
 
-        var genMesh = MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
+        var generatedRawMeshData = MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
 
         AssignMeshComponents(meshData);
-        var mesh = genMesh.CreateMesh();
+        var mesh = generatedRawMeshData.CreateMesh();
         mesh.name = coords.x + " " + coords.y;
         meshData.meshFilter.sharedMesh = mesh;
+        meshData.lod = generatedRawMeshData.genLODTriangles();
 
         if (!meshData.holder.transform.GetComponent<MeshCollider>()) return;
         var coll = meshData.holder.transform.gameObject.GetComponent<MeshCollider>();

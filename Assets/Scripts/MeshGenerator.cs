@@ -66,6 +66,24 @@ public static class MeshGenerator
             }
         }
 
+
+        for (var y = 1; y < borderedSize-2; y += 2)
+        {
+            for (var x = 1; x < borderedSize-2; x += 2)
+            {
+                if (x < borderedSize - 1 && y < borderedSize - 1)
+                {
+                    var a = vertexIndicesMap[x, y];
+                    var b = vertexIndicesMap[x + 2, y];
+                    var c = vertexIndicesMap[x, y + 2];
+                    var d = vertexIndicesMap[x + 2, y + 2];
+
+                    meshBuffer.AddTriangle(a, c, d, 2);
+                    meshBuffer.AddTriangle(d, b, a,2);
+                }
+            }
+        }
+
         return meshBuffer;
     }
 
@@ -75,12 +93,14 @@ public static class MeshGenerator
         private readonly Color[] _colors;
         private readonly Color32[] _colors32;
         private readonly int[] _triangles;
+        private readonly int[] _LOD2triangles;
         private readonly Vector2[] _uvs;
 
         private readonly Vector3[] _borderVertices;
         private readonly int[] _borderTriangles;
 
         private int _triangleIndex;
+        private int _triangleLOD2Index;
         private int _borderTriangleIndex;
 
         public MeshData(int verticesPerLine)
@@ -90,9 +110,15 @@ public static class MeshGenerator
             _colors = new Color[verticesPerLine * verticesPerLine];
             _uvs = new Vector2[verticesPerLine * verticesPerLine];
             _triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
+            _LOD2triangles = new int[_triangles.Length / 4];
 
             _borderVertices = new Vector3[verticesPerLine * 4 + 4];
             _borderTriangles = new int[24 * verticesPerLine];
+        }
+        
+        public Chunk.LODTriangles genLODTriangles()
+        {
+            return new Chunk.LODTriangles(_triangles,_LOD2triangles);
         }
 
         public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
@@ -108,7 +134,7 @@ public static class MeshGenerator
             }
         }
 
-        public void AddTriangle(int a, int b, int c)
+        public void AddTriangle(int a, int b, int c, int LOD = 1)
         {
             if (a < 0 || b < 0 || c < 0)
             {
@@ -119,10 +145,20 @@ public static class MeshGenerator
             }
             else
             {
-                _triangles[_triangleIndex] = a;
-                _triangles[_triangleIndex + 1] = b;
-                _triangles[_triangleIndex + 2] = c;
-                _triangleIndex += 3;
+                if (LOD == 1)
+                {
+                    _triangles[_triangleIndex] = a;
+                    _triangles[_triangleIndex + 1] = b;
+                    _triangles[_triangleIndex + 2] = c;
+                    _triangleIndex += 3; 
+                }
+                if (LOD == 2)
+                {
+                    _LOD2triangles[_triangleLOD2Index] = a;
+                    _LOD2triangles[_triangleLOD2Index + 1] = b;
+                    _LOD2triangles[_triangleLOD2Index + 2] = c;
+                    _triangleLOD2Index += 3; 
+                }
             }
         }
 
@@ -199,6 +235,7 @@ public static class MeshGenerator
                 colors32 = _colors32,
                 colors = _colors
             };
+            mesh.MarkDynamic();
             return mesh;
         }
     }

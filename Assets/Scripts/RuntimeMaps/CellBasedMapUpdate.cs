@@ -13,7 +13,7 @@ public class CellBasedMapUpdate : IRuntimeMap
 
     private readonly int _mapSize;
     private readonly int _mapSizeSquared;
-
+    
     public PhysicData Physic { get; }
 
     public CellBasedMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
@@ -21,8 +21,8 @@ public class CellBasedMapUpdate : IRuntimeMap
     {
         Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
         Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
-        
-        Physic = physicData;
+
+        Physic = physicData;//new PhysicData {SandSlopeRatio = 0.001f, SandStiffness = 0.1f};
         _mapSize = heightMapSize;
         _mapSizeSquared = stoneHeightMap.Count;
 
@@ -71,16 +71,16 @@ public class CellBasedMapUpdate : IRuntimeMap
         switch (type)
         {
             case Cell.Type.Stone:
-                cell.Stone += amount;
+                cell.Stone = Mathf.Max(cell.Stone + amount, 0);
                 break;
             case Cell.Type.Sand:
-                cell.Sand += amount;
+                cell.Sand = Mathf.Max(cell.Sand + amount, 0);
                 break;
             case Cell.Type.Water:
-                cell.Water += amount;
+                cell.Water = Mathf.Max(cell.Water + amount, 0);
                 break;
             case Cell.Type.Lava:
-                cell.Lava += amount;
+                cell.Lava = Mathf.Max(cell.Lava + amount, 0);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
@@ -149,9 +149,9 @@ public class CellBasedMapUpdate : IRuntimeMap
             //found smaller one
             if (index == -1) return;
             var m = kernel[index];
-            var stoneDiff = centerCell.LithoHeight - smallerCell.LithoHeight;
+            var lithoDiff = centerCell.LithoHeight - smallerCell.LithoHeight;
 
-            var sandDiff = centerCell.Water - smallerCell.Water;
+            var sandDiff = centerCell.Stone - smallerCell.Water;
             var hdiff = currentTotalHeight - lowest;
             var w = centerCell.Water;
 
@@ -166,15 +166,13 @@ public class CellBasedMapUpdate : IRuntimeMap
                 centerCell.Water -= hdiff * Physic.WaterViscosity;
                 smallerCell.Water += hdiff * ( /*1.0f - */ Physic.WaterViscosity);
             }
-
-            //Coded for water
-            /*float hardness=envo.stone.getHardness(x, y);
-            float cutoff=1;
-            if (hdiff>cutoff) {
-                float s=envo.stone.get(x, y);
-                envo.stone.sub(x, y, (stoneDiff*hardness));
-                envo.stone.add(x+m[0], y+m[1], (stoneDiff*hardness));
-            }*/
+            
+            if (!(centerCell.Sand > 0)) return;
+            var hardness = Physic.StoneHardness;
+            const float cutoff = 1;
+            if (!(hdiff > cutoff)) return;
+            centerCell.Sand += lithoDiff * hardness;
+            smallerCell.Sand += lithoDiff * hardness;
         }
 
         void HandleSand(Cell centerCell, int x, int y)
@@ -184,58 +182,29 @@ public class CellBasedMapUpdate : IRuntimeMap
                 centerCell.Sand = 0.0f;
                 return;
             }
+            if (centerCell.Sand < Physic.SandCreationHeight)
+            {
+                centerCell.Sand += Physic.SandCreationSpeed;
+            }
 
             if (centerCell.Sand < Physic.SandStiffness) return;
-
-            var currentTotalHeight = centerCell.Stone + centerCell.Sand;
-            var lowest = currentTotalHeight;
-
-            var smallerCell = centerCell;
-            var index = -1;
+            
+            var ratio = Physic.SandSlopeRatio;
             for (var i = 0; i < kernel.Length; i++)
             {
+                if (centerCell.Sand < Physic.SandStiffness) continue;
                 var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
                 var otherCell = _map[otherIndex];
-
-                var totalNew = otherCell.Stone + otherCell.Sand;
-                if (!(totalNew <= lowest)) continue;
-                index = i;
-                lowest = totalNew;
-                smallerCell = otherCell;
-            }
-
-            //found smaller one
-            if (index == -1) return;
-            var m = kernel[index];
-            var stoneDiff = centerCell.Stone - smallerCell.Stone;
-
-            var sandDiff = centerCell.Sand - smallerCell.Sand;
-            var hdiff = currentTotalHeight - lowest;
-            var w = centerCell.Sand;
-
-
-            var ratio = Physic.SandSlopeRatio;
-            if ((centerCell.Sand) > lowest)
-            {
-                //splash randomly?
-                var splashRatio = 0.1f;
-                centerCell.Sand = w * splashRatio;
-                smallerCell.Sand = w * (1.0f - splashRatio);
-            }
-            else
-            {
+                
+                var centerHeight = centerCell.Stone + centerCell.Sand;
+                var otherHeight = otherCell.Stone + otherCell.Sand;
+                
+                if (otherHeight >= centerHeight) continue;
+                var hdiff = centerHeight - otherHeight;
                 centerCell.Sand -= hdiff * ratio;
-                smallerCell.Sand += hdiff * ratio;
+                otherCell.Sand += hdiff * ratio;
             }
 
-            //Coded for water
-            /*float hardness=envo.stone.getHardness(x, y);
-            float cutoff=1;
-            if (hdiff>cutoff) {
-                float s=envo.stone.get(x, y);
-                envo.stone.sub(x, y, (stoneDiff*hardness));
-                envo.stone.add(x+m[0], y+m[1], (stoneDiff*hardness));
-            }*/
         }
 
         for (var x = 1; x < _mapSize - 1; x++)
@@ -245,7 +214,7 @@ public class CellBasedMapUpdate : IRuntimeMap
                 var middleIndex = y * _mapSize + x;
                 var centerCell = _map[middleIndex];
 
-                //HandleSand(centerCell, x, y);
+                HandleSand(centerCell, x, y);
                 HandleWater(centerCell, x, y);
             }
         }
