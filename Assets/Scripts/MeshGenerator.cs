@@ -58,8 +58,8 @@ public static class MeshGenerator
                     var c = vertexIndicesMap[x, y + 1];
                     var d = vertexIndicesMap[x + 1, y + 1];
 
-                    meshBuffer.AddTriangle(a, c, d);
-                    meshBuffer.AddTriangle(d, b, a);
+                    meshBuffer.AddTriangle(a, c, d, LODTriangles.LOD.LOD0);
+                    meshBuffer.AddTriangle(d, b, a, LODTriangles.LOD.LOD0);
                 }
 
                 vertexIndex++;
@@ -67,9 +67,9 @@ public static class MeshGenerator
         }
 
 
-        for (var y = 1; y < borderedSize-2; y += 2)
+        for (var y = 1; y < borderedSize - 2; y += 2)
         {
-            for (var x = 1; x < borderedSize-2; x += 2)
+            for (var x = 1; x < borderedSize - 2; x += 2)
             {
                 if (x < borderedSize - 1 && y < borderedSize - 1)
                 {
@@ -78,8 +78,25 @@ public static class MeshGenerator
                     var c = vertexIndicesMap[x, y + 2];
                     var d = vertexIndicesMap[x + 2, y + 2];
 
-                    meshBuffer.AddTriangle(a, c, d, 2);
-                    meshBuffer.AddTriangle(d, b, a,2);
+                    meshBuffer.AddTriangle(a, c, d, LODTriangles.LOD.LOD1);
+                    meshBuffer.AddTriangle(d, b, a, LODTriangles.LOD.LOD1);
+                }
+            }
+        }
+
+        for (var y = 1; y < borderedSize - 4; y += 4)
+        {
+            for (var x = 1; x < borderedSize - 4; x += 4)
+            {
+                if (x < borderedSize - 1 && y < borderedSize - 1)
+                {
+                    var a = vertexIndicesMap[x, y];
+                    var b = vertexIndicesMap[x + 4, y];
+                    var c = vertexIndicesMap[x, y + 4];
+                    var d = vertexIndicesMap[x + 4, y + 4];
+
+                    meshBuffer.AddTriangle(a, c, d, LODTriangles.LOD.LOD2);
+                    meshBuffer.AddTriangle(d, b, a, LODTriangles.LOD.LOD2);
                 }
             }
         }
@@ -93,6 +110,7 @@ public static class MeshGenerator
         private readonly Color[] _colors;
         private readonly Color32[] _colors32;
         private readonly int[] _triangles;
+        private readonly int[] _LOD1triangles;
         private readonly int[] _LOD2triangles;
         private readonly Vector2[] _uvs;
 
@@ -100,6 +118,7 @@ public static class MeshGenerator
         private readonly int[] _borderTriangles;
 
         private int _triangleIndex;
+        private int _triangleLOD1Index;
         private int _triangleLOD2Index;
         private int _borderTriangleIndex;
 
@@ -110,15 +129,16 @@ public static class MeshGenerator
             _colors = new Color[verticesPerLine * verticesPerLine];
             _uvs = new Vector2[verticesPerLine * verticesPerLine];
             _triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
-            _LOD2triangles = new int[_triangles.Length / 4];
+            _LOD1triangles = new int[_triangles.Length / 4];
+            _LOD2triangles = new int[_triangles.Length / 16];
 
             _borderVertices = new Vector3[verticesPerLine * 4 + 4];
             _borderTriangles = new int[24 * verticesPerLine];
         }
-        
-        public Chunk.LODTriangles genLODTriangles()
+
+        public LODTriangles GenLODTriangles()
         {
-            return new Chunk.LODTriangles(_triangles,_LOD2triangles);
+            return new LODTriangles(_triangles, _LOD1triangles, _LOD2triangles);
         }
 
         public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
@@ -134,7 +154,7 @@ public static class MeshGenerator
             }
         }
 
-        public void AddTriangle(int a, int b, int c, int LOD = 1)
+        public void AddTriangle(int a, int b, int c, LODTriangles.LOD lodLevel = LODTriangles.LOD.LOD0)
         {
             if (a < 0 || b < 0 || c < 0)
             {
@@ -145,19 +165,28 @@ public static class MeshGenerator
             }
             else
             {
-                if (LOD == 1)
+                switch (lodLevel)
                 {
-                    _triangles[_triangleIndex] = a;
-                    _triangles[_triangleIndex + 1] = b;
-                    _triangles[_triangleIndex + 2] = c;
-                    _triangleIndex += 3; 
-                }
-                if (LOD == 2)
-                {
-                    _LOD2triangles[_triangleLOD2Index] = a;
-                    _LOD2triangles[_triangleLOD2Index + 1] = b;
-                    _LOD2triangles[_triangleLOD2Index + 2] = c;
-                    _triangleLOD2Index += 3; 
+                    case LODTriangles.LOD.LOD0:
+                        _triangles[_triangleIndex] = a;
+                        _triangles[_triangleIndex + 1] = b;
+                        _triangles[_triangleIndex + 2] = c;
+                        _triangleIndex += 3;
+                        break;
+                    case LODTriangles.LOD.LOD1:
+                        _LOD1triangles[_triangleLOD1Index] = a;
+                        _LOD1triangles[_triangleLOD1Index + 1] = b;
+                        _LOD1triangles[_triangleLOD1Index + 2] = c;
+                        _triangleLOD1Index += 3;
+                        break;
+                    case LODTriangles.LOD.LOD2:
+                        _LOD2triangles[_triangleLOD2Index] = a;
+                        _LOD2triangles[_triangleLOD2Index + 1] = b;
+                        _LOD2triangles[_triangleLOD2Index + 2] = c;
+                        _triangleLOD2Index += 3;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(lodLevel), lodLevel, null);
                 }
             }
         }

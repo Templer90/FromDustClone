@@ -17,6 +17,7 @@ public class NormalsVisualizer : UnityEditor.Editor {
         if (_mesh == null) {
             return;
         }
+        return;
 
         Handles.matrix = ((MeshFilter) target).transform.localToWorldMatrix;
         Handles.color = Color.yellow;

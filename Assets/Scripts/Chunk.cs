@@ -10,51 +10,8 @@ public class Chunk : MonoBehaviour
     public float scale = 0;
     public float elevationScale = 10;
     public Bounds Bounds;
-    public LODTriangles.LOD LOD = LODTriangles.LOD.LOD1;
+    public LODTriangles.LOD LOD = LODTriangles.LOD.LOD0;
 
-
-    [Serializable]
-    public class LODTriangles
-    {
-        public enum LOD
-        {
-            LOD1,
-            LOD2
-        };
-
-        public int[] _LOD1triangles;
-        public int[] _LOD2triangles;
-        private LOD oldLOD = LOD.LOD1;
-
-        public LODTriangles(int[] lod1, int[] lod2)
-        {
-            _LOD1triangles = new int[lod1.Length];
-            lod1.CopyTo(_LOD1triangles, 0);
-            _LOD2triangles = new int[lod2.Length];
-            lod2.CopyTo(_LOD2triangles, 0);
-        }
-
-        public void SwitchTriangles(Mesh mesh, LOD LOD)
-        {
-            if (LOD == oldLOD) return;
-            switch (LOD)
-            {
-                case LOD.LOD1:
-                    mesh.triangles = _LOD1triangles;
-                    mesh.RecalculateBounds();
-                    break;
-                case LOD.LOD2:
-                    mesh.triangles = _LOD2triangles;
-                    mesh.RecalculateBounds();
-                    break;
-                default:
-                    mesh.triangles = mesh.triangles;
-                    break;
-            }
-
-            oldLOD = LOD;
-        }
-    }
 
     [Serializable]
     public class MeshData
@@ -146,8 +103,14 @@ public class Chunk : MonoBehaviour
         var offsetX = coords.x * mapSize;
         var offsetY = coords.y * mapSize;
 
+        var step = LOD switch
+        {
+            LODTriangles.LOD.LOD0 => 1,
+            LODTriangles.LOD.LOD1 => 2,
+            LODTriangles.LOD.LOD2 => 4,
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
-        var step = LOD == LODTriangles.LOD.LOD1 ? 1 : 2;
         for (var x = 0; x < xSize; x += step)
         {
             for (var y = 0; y < ySize; y += step)
@@ -216,7 +179,7 @@ public class Chunk : MonoBehaviour
         var mesh = generatedRawMeshData.CreateMesh();
         mesh.name = coords.x + " " + coords.y;
         meshData.meshFilter.sharedMesh = mesh;
-        meshData.lod = generatedRawMeshData.genLODTriangles();
+        meshData.lod = generatedRawMeshData.GenLODTriangles();
 
         if (!meshData.holder.transform.GetComponent<MeshCollider>()) return;
         var coll = meshData.holder.transform.gameObject.GetComponent<MeshCollider>();
