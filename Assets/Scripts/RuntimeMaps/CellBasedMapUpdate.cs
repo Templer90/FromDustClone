@@ -166,7 +166,8 @@ public class CellBasedMapUpdate : IRuntimeMap
                 centerCell.Water -= hdiff * Physic.WaterViscosity;
                 smallerCell.Water += hdiff * ( /*1.0f - */ Physic.WaterViscosity);
             }
-            
+
+            return;
             if (!(centerCell.Sand > 0)) return;
             var hardness = Physic.StoneHardness;
             const float cutoff = 1;
@@ -184,7 +185,7 @@ public class CellBasedMapUpdate : IRuntimeMap
             }
             if (centerCell.Sand < Physic.SandCreationHeight)
             {
-                centerCell.Sand += Physic.SandCreationSpeed;
+                //centerCell.Sand += Physic.SandCreationSpeed;
             }
 
             if (centerCell.Sand < Physic.SandStiffness) return;

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Rendering.VirtualTexturing;
 
 public static class MeshGenerator
 {
@@ -110,8 +111,8 @@ public static class MeshGenerator
         private readonly Color[] _colors;
         private readonly Color32[] _colors32;
         private readonly int[] _triangles;
-        private readonly int[] _LOD1triangles;
-        private readonly int[] _LOD2triangles;
+        private readonly int[] _lod1Triangles;
+        private readonly int[] _lod2Triangles;
         private readonly Vector2[] _uvs;
 
         private readonly Vector3[] _borderVertices;
@@ -129,8 +130,8 @@ public static class MeshGenerator
             _colors = new Color[verticesPerLine * verticesPerLine];
             _uvs = new Vector2[verticesPerLine * verticesPerLine];
             _triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
-            _LOD1triangles = new int[_triangles.Length / 4];
-            _LOD2triangles = new int[_triangles.Length / 16];
+            _lod1Triangles = new int[_triangles.Length / 4];
+            _lod2Triangles = new int[_triangles.Length / 16];
 
             _borderVertices = new Vector3[verticesPerLine * 4 + 4];
             _borderTriangles = new int[24 * verticesPerLine];
@@ -138,7 +139,13 @@ public static class MeshGenerator
 
         public LODTriangles GenLODTriangles()
         {
-            return new LODTriangles(_triangles, _LOD1triangles, _LOD2triangles);
+            var checkedLOD2 = new int[_triangleLOD2Index];
+            for (var i = 0; i < _triangleLOD2Index; i++)
+            {
+                checkedLOD2[i] = _lod2Triangles[i];
+            }
+
+            return new LODTriangles(_triangles, _lod1Triangles, checkedLOD2);
         }
 
         public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
@@ -174,15 +181,15 @@ public static class MeshGenerator
                         _triangleIndex += 3;
                         break;
                     case LODTriangles.LOD.LOD1:
-                        _LOD1triangles[_triangleLOD1Index] = a;
-                        _LOD1triangles[_triangleLOD1Index + 1] = b;
-                        _LOD1triangles[_triangleLOD1Index + 2] = c;
+                        _lod1Triangles[_triangleLOD1Index] = a;
+                        _lod1Triangles[_triangleLOD1Index + 1] = b;
+                        _lod1Triangles[_triangleLOD1Index + 2] = c;
                         _triangleLOD1Index += 3;
                         break;
                     case LODTriangles.LOD.LOD2:
-                        _LOD2triangles[_triangleLOD2Index] = a;
-                        _LOD2triangles[_triangleLOD2Index + 1] = b;
-                        _LOD2triangles[_triangleLOD2Index + 2] = c;
+                        _lod2Triangles[_triangleLOD2Index] = a;
+                        _lod2Triangles[_triangleLOD2Index + 1] = b;
+                        _lod2Triangles[_triangleLOD2Index + 2] = c;
                         _triangleLOD2Index += 3;
                         break;
                     default:

@@ -11,6 +11,8 @@ public class RuntimeMapHolder : MonoBehaviour
     public MapTypes mapType = MapTypes.CellBased;
     public PhysicData data;
     [Range(-0.1f, 10)] public float timer = 1.0f;
+    [Min(1)] public int chunkOffset = 1;
+    [Min(1)] public float LOD2Size = 300;
 
     private float _counter = 0;
     private Camera _cam;
@@ -18,13 +20,14 @@ public class RuntimeMapHolder : MonoBehaviour
     private int _chunksize = 10;
     private float _scale = 20;
     private Chunk[] _chunks;
+    private Plane[] _planes = new Plane[6];
 
     public enum MapTypes
     {
         Simple,
         CellBased
     }
-    
+
     public IRuntimeMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
         IReadOnlyList<float> initialWaterMap)
     {
@@ -63,23 +66,42 @@ public class RuntimeMapHolder : MonoBehaviour
         if (_counter > 0 && _counter < timer) return;
         _counter -= timer;
 
-        var planes = GeometryUtility.CalculateFrustumPlanes(_cam);
-        var offset = 1;
-        var startOffset = Time.frameCount % offset;
-        for (var i = startOffset; i < _chunks.Length; i += offset)
+        GeometryUtility.CalculateFrustumPlanes(_cam, _planes);
+        var startOffset = Time.frameCount % chunkOffset;
+        for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
         {
-            var chunk = _chunks[i];
-            if (GeometryUtility.TestPlanesAABB(planes, chunk.Bounds))
+            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].Bounds))
             {
-                chunk.gameObject.SetActive(true);
-                chunk.UpdateMeshes();
+                _chunks[i].Show();
             }
             else
             {
-                chunk.gameObject.SetActive(false);
+                _chunks[i].Hide();
+            }
+        }
+
+        // create projection matrix: 60 FOV, square aspect, near plane 1, far plane 1000
+        var matrix = _cam.projectionMatrix;
+        var near = LOD2Size;
+        var c = -(_cam.farClipPlane + near) / (_cam.farClipPlane - near);
+        var d = -(2.0F * _cam.farClipPlane * near) / (_cam.farClipPlane - near);
+        matrix[2, 2] = c;
+        matrix[2, 3] = d;
+        GeometryUtility.CalculateFrustumPlanes(matrix * _cam.worldToCameraMatrix, _planes);
+        for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
+        {
+            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].Bounds))
+            {
+                _chunks[i].LOD = LODTriangles.LOD.LOD2;
+            }
+            else
+            {
+                _chunks[i].LOD = LODTriangles.LOD.LOD0;
             }
         }
     }
+
+    public Matrix4x4 test;
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)
     {

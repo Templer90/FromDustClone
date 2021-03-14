@@ -12,9 +12,9 @@ public class LODTriangles
         LOD2
     };
 
-    public int[] lod0Triangles;
-    public int[] lod1Triangles;
-    public int[] lod2Triangles;
+    [SerializeField] public int[] lod0Triangles;
+    [SerializeField] public int[] lod1Triangles;
+    [SerializeField] public int[] lod2Triangles;
     private LOD _oldLOD = LOD.LOD0;
 
     public LODTriangles(int[] lod0, int[] lod1, int[] lod2)
@@ -52,5 +52,11 @@ public class LODTriangles
         }
 
         _oldLOD = lodLevel;
+    }
+
+
+    public void RecalculateNormals(Mesh mesh, Func<int, int, float> heightMapFunc)
+    {
+        throw new NotImplementedException("Not Yet Implemented?");
     }
 }

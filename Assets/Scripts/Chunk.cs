@@ -41,22 +41,22 @@ public class Chunk : MonoBehaviour
     public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
     {
+        scale = scaling;
+        coords.x = x;
+        coords.y = y;
+        _map = mainMap;
+        _mainSize = mainMapSize;
+        mapSize = chunkSize;
+        elevationScale = elevationScaling;
+
         var pos = new Vector3(x * scale, 0, y * scale);
         var halfScale = scale / 2.0f;
         var transform1 = transform;
         transform1.name = "Chunk(" + x + "," + y + ")";
         transform1.position = pos;
 
-        Bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 100, halfScale));
+        Bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 50, halfScale));
 
-        coords.x = x;
-        coords.y = y;
-        _map = mainMap;
-        _mainSize = mainMapSize;
-
-        mapSize = chunkSize;
-        scale = scaling;
-        elevationScale = elevationScaling;
 
         //Ensure that meshes is right
         var tmpMeshes = new MeshData[4];
@@ -84,9 +84,53 @@ public class Chunk : MonoBehaviour
 
     public void ConstructMeshes()
     {
+        if (mapSize % 12 != 0)
+        {
+            Debug.Log($"MeshSize ({mapSize}) not divisible by 3 and 4");
+        }
+
         ConstructMesh_Internal(meshes[(int) Cell.Type.Stone]);
         ConstructMesh_Internal(meshes[(int) Cell.Type.Water]);
     }
+
+    public void Hide()
+    {
+        if (gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            //Stuff
+        }
+    }
+
+    public void Show()
+    {
+        if (gameObject.activeSelf)
+        {
+            UpdateMeshes();
+        }
+        else
+        {
+            ConstructMesh_Internal(meshes[(int) Cell.Type.Stone]);
+            ConstructMesh_Internal(meshes[(int) Cell.Type.Water]);
+
+            AssignMeshComponents(meshes[(int) Cell.Type.Stone]);
+            AssignMeshComponents(meshes[(int) Cell.Type.Water]);
+            gameObject.SetActive(true);
+
+            /*UpdateMeshes();
+            var meshData = meshes[(int) Cell.Type.Stone];
+            float GETFunc(int x, int y)
+            {
+                return GETCell(x, y, meshData);
+            }
+            meshData.lod.RecalculateNormals(meshData.meshFilter.mesh, GETFunc);
+            gameObject.SetActive(true);*/
+        }
+    }
+
 
     public void UpdateMeshes()
     {
@@ -156,21 +200,26 @@ public class Chunk : MonoBehaviour
         return _map.ValueAt((int) coords.x * mapSize + x, (int) coords.y * mapSize + y, type);
     }
 
+    private float GETCell(int x, int y, MeshData meshData)
+    {
+        var xPos = (int) coords.x * mapSize + (x == -1 ? 0 : x);
+        var yPos = (int) coords.y * mapSize + (y == -1 ? 0 : y);
+        try
+        {
+            return _map.ValidCoord(xPos, yPos) ? _map.ValueAt(xPos, yPos, meshData.Type) : float.NaN;
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+            return float.NaN;
+        }
+    }
+
     private void ConstructMesh_Internal(MeshData meshData)
     {
         float GETFunc(int x, int y)
         {
-            var xPos = (int) coords.x * mapSize + (x == -1 ? 0 : x);
-            var yPos = (int) coords.y * mapSize + (y == -1 ? 0 : y);
-            try
-            {
-                return _map.ValidCoord(xPos, yPos) ? _map.ValueAt(xPos, yPos, meshData.Type) : float.NaN;
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-                return float.NaN;
-            }
+            return GETCell(x, y, meshData);
         }
 
         var generatedRawMeshData = MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, elevationScale, scale);
