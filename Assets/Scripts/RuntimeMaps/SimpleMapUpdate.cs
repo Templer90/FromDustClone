@@ -93,35 +93,6 @@ public class SimpleMapUpdate : IRuntimeMap
         }
     }
 
-    public void SimpleSmooth()
-    {
-        var kernel = new[]
-        {
-            (-1, -1), (-1, 0), (-1, +1),
-            (0, -1), (0, +1),
-            (+1, -1), (+1, 0), (+1, +1)
-        };
-        const float materialStiffness = 0.001f;
-
-        for (var x = 1; x < _mapSize - 1; x++)
-        {
-            for (var y = 1; y < _mapSize - 1; y++)
-            {
-                var middle = y * _mapSize + x;
-
-                for (var i = 0; i < 8; i++)
-                {
-                    var other = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                    var diff = _map[middle].Water - _map[other].Water;
-                    var delta = diff * materialStiffness;
-                    _map[middle].Water -= delta;
-                    _map[other].Water += delta;
-                }
-            }
-        }
-    }
-
-
     public void MapUpdate()
     {
         var kernel = Physic.GETKernel();

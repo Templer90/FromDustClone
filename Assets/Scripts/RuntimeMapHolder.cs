@@ -25,7 +25,8 @@ public class RuntimeMapHolder : MonoBehaviour
     public enum MapTypes
     {
         Simple,
-        CellBased
+        CellBased,
+        NavierStokes
     }
 
     public IRuntimeMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
@@ -39,6 +40,9 @@ public class RuntimeMapHolder : MonoBehaviour
                 break;
             case MapTypes.CellBased:
                 newMapUpdate = new CellBasedMapUpdate(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                break;
+            case MapTypes.NavierStokes:
+                newMapUpdate = new NavierStokes(sideLength, data, initialStoneHeightMap, initialWaterMap);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

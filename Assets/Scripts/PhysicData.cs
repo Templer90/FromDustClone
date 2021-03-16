@@ -19,11 +19,15 @@ public class PhysicData
     public float SandSlopeRatio = 0.5f;
     
     [Header("Water Settings")]
-    public float WaterViscosity = 0.01f;
+    public float WaterViscosity = 0.0000001f;
     public float EvaporationThreshold = 0.0001f;
     public float WaterSplashRatio = 0.1f;
+    public float WaterDiffusion = 0.0f;
 
+    [Header("NavierStokes Settings")] 
+    public float dt = 0.2f;
 
+    
     public Kernels UsedKernel = Kernels.VonNeumann;
 
     public enum Kernels
