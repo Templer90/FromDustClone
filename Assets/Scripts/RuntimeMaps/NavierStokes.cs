@@ -143,13 +143,13 @@ public class NavierStokes : IRuntimeMap
         return x + (y * _mapSize);
     }
 
-    private void Diffuse(int b, float[] x, float[] x0, float diff, float dt)
+    private void Diffuse(int b, IList<float> x, IReadOnlyList<float> x0, float diff, float dt)
     {
         var a = dt * diff * (_mapSize - 2) * (_mapSize - 2);
         lin_solve(b, x, x0, a, 1 + 4 * a);
     }
 
-    private void lin_solve(int b, float[] x, float[] x0, float a, float c)
+    private void lin_solve(int b, IList<float> x, IReadOnlyList<float> x0, float a, float c)
     {
         var cRecip = 1.0f / c;
         for (var k = 0; k < Physic.iter; k++)
@@ -158,13 +158,12 @@ public class NavierStokes : IRuntimeMap
             {
                 for (var i = 1; i < _mapSize - 1; i++)
                 {
-                    x[IX(i, j)] =
-                        (x0[IX(i, j)]
-                         + a * (x[IX(i + 1, j)]
-                                + x[IX(i - 1, j)]
-                                + x[IX(i, j + 1)]
-                                + x[IX(i, j - 1)]
-                         )) * cRecip;
+                    x[IX(i, j)] = (x0[IX(i, j)]
+                                   + a * (x[IX(i + 1, j)]
+                                          + x[IX(i - 1, j)]
+                                          + x[IX(i, j + 1)]
+                                          + x[IX(i, j - 1)]
+                                   )) * cRecip;
                 }
             }
 
@@ -172,7 +171,7 @@ public class NavierStokes : IRuntimeMap
         }
     }
 
-    private void Project(float[] velocX, float[] velocY, float[] p, float[] div)
+    private void Project(IList<float> velocX, IList<float> velocY, IList<float> p, float[] div)
     {
         for (var j = 1; j < _mapSize - 1; j++)
         {
@@ -191,32 +190,13 @@ public class NavierStokes : IRuntimeMap
         set_bnd(0, div);
         set_bnd(0, p);
         lin_solve(0, p, div, 1, 4);
-        
-        var kernel = Physic.GETKernel();
+
         for (var y = 1; y < _mapSize - 1; y++)
         {
             for (var x = 1; x < _mapSize - 1; x++)
             {
-                velocX[IX(x, y)] -= 0.5f * (p[IX(x + 1, y)]- p[IX(x - 1, y)]) * _mapSize;
-                velocY[IX(x, y)] -= 0.5f * (p[IX(x, y + 1)]- p[IX(x, y - 1)]) * _mapSize;
-
-             /*
-                var middle = StoneHeight[IX(x, y)].LithoHeight;
-                var lowest = middle;
-                var dir = (0f, 0f);
-                for (var i = 0; i < kernel.Length; i++)
-                {
-                    //var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                    var otherStone = StoneHeight[IX(x+kernel[i].Item2, y+kernel[i].Item1)].LithoHeight;
-
-                    if (otherStone < lowest) continue;
-                    dir = kernel[i];
-                    lowest = otherStone;
-                }
-
-                velocX[IX(x, y)] = dir.Item2*(middle - lowest);
-                velocY[IX(x, y)] = dir.Item1*(middle - lowest);
-                */
+                velocX[IX(x, y)] -= 0.5f * (p[IX(x + 1, y)] - p[IX(x - 1, y)]) * _mapSize;
+                velocY[IX(x, y)] -= 0.5f * (p[IX(x, y + 1)] - p[IX(x, y - 1)]) * _mapSize;
             }
         }
 
@@ -225,7 +205,7 @@ public class NavierStokes : IRuntimeMap
     }
 
 
-    private void Advect(int b, float[] d, float[] d0, float[] velocX, float[] velocY, float dt)
+    private void Advect(int b, IList<float> d, IReadOnlyList<float> d0, IReadOnlyList<float> velocX, IReadOnlyList<float> velocY, float dt)
     {
         float i0, i1, j0, j1;
 
@@ -252,6 +232,7 @@ public class NavierStokes : IRuntimeMap
                 if (x > Nfloat + 0.5f) x = Nfloat + 0.5f;
                 i0 = Mathf.Floor(x);
                 i1 = i0 + 1.0f;
+                
                 if (y < 0.5f) y = 0.5f;
                 if (y > Nfloat + 0.5f) y = Nfloat + 0.5f;
                 j0 = Mathf.Floor(y);
@@ -277,17 +258,14 @@ public class NavierStokes : IRuntimeMap
         set_bnd(b, d);
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void set_bnd(int b, IList<float> x)
     {
         for (var i = 1; i < _mapSize - 1; i++)
         {
             x[IX(i, 0)] = b == 2 ? -x[IX(i, 1)] : x[IX(i, 1)];
             x[IX(i, _mapSize - 1)] = b == 2 ? -x[IX(i, _mapSize - 2)] : x[IX(i, _mapSize - 2)];
-        }
-
-        for (var i = 1; i < _mapSize - 1; i++)
-        {
+ 
             x[IX(0, i)] = b == 1 ? -x[IX(1, i)] : x[IX(1, i)];
             x[IX(_mapSize - 1, i)] = b == 1 ? -x[IX(_mapSize - 2, i)] : x[IX(_mapSize - 2, i)];
         }
@@ -295,10 +273,8 @@ public class NavierStokes : IRuntimeMap
         x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
         x[IX(0, _mapSize - 1)] = 0.5f * (x[IX(1, _mapSize - 1)] + x[IX(0, _mapSize - 2)]);
         x[IX(_mapSize - 1, 0)] = 0.5f * (x[IX(_mapSize - 2, 0)] + x[IX(_mapSize - 1, 1)]);
-        x[IX(_mapSize - 1, _mapSize - 1)] =
-            0.5f * (x[IX(_mapSize - 2, _mapSize - 1)] + x[IX(_mapSize - 1, _mapSize - 2)]);
+        x[IX(_mapSize - 1, _mapSize - 1)] = 0.5f * (x[IX(_mapSize - 2, _mapSize - 1)] + x[IX(_mapSize - 1, _mapSize - 2)]);
     }
-
 
     public void MapUpdate()
     {
@@ -314,12 +290,5 @@ public class NavierStokes : IRuntimeMap
 
         Diffuse(0, s, density, Physic.WaterDiffusion, Physic.dt);
         Advect(0, density, s, Vx, Vy, Physic.dt);
-
-        return;
-        for (var i = 0; i < density.Length; i++)
-        {
-            var d = density[i];
-            density[i] = Mathf.Clamp01(d-0.00002f);
-        }
     }
 }

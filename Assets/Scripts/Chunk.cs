@@ -72,6 +72,7 @@ public class Chunk : MonoBehaviour
     {
         AssignMeshComponents(meshes[(int) Cell.Type.Stone]);
         AssignMeshComponents(meshes[(int) Cell.Type.Water]);
+        AssignMeshComponents(meshes[(int) Cell.Type.Lava]);
 
         var meshStone = meshes[(int) Cell.Type.Stone].meshFilter.mesh;
         meshes[(int) Cell.Type.Stone].vertices = meshStone.vertices;
@@ -80,6 +81,10 @@ public class Chunk : MonoBehaviour
         var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
         meshes[(int) Cell.Type.Water].vertices = meshWater.vertices;
         meshes[(int) Cell.Type.Water].color = meshWater.colors;
+
+        var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
+        meshes[(int) Cell.Type.Lava].vertices = meshLava.vertices;
+        meshes[(int) Cell.Type.Lava].color = meshLava.colors;
     }
 
     public void ConstructMeshes()
@@ -91,6 +96,7 @@ public class Chunk : MonoBehaviour
 
         ConstructMesh_Internal(meshes[(int) Cell.Type.Stone]);
         ConstructMesh_Internal(meshes[(int) Cell.Type.Water]);
+        ConstructMesh_Internal(meshes[(int) Cell.Type.Lava]);
     }
 
     public void Hide()
@@ -115,9 +121,11 @@ public class Chunk : MonoBehaviour
         {
             ConstructMesh_Internal(meshes[(int) Cell.Type.Stone]);
             ConstructMesh_Internal(meshes[(int) Cell.Type.Water]);
+            ConstructMesh_Internal(meshes[(int) Cell.Type.Lava]);
 
             AssignMeshComponents(meshes[(int) Cell.Type.Stone]);
             AssignMeshComponents(meshes[(int) Cell.Type.Water]);
+            AssignMeshComponents(meshes[(int) Cell.Type.Lava]);
             gameObject.SetActive(true);
 
             /*UpdateMeshes();
@@ -155,6 +163,9 @@ public class Chunk : MonoBehaviour
             _ => throw new ArgumentOutOfRangeException()
         };
 
+        var waterVisibility = false;
+        var lavaVisibility = false;
+
         for (var x = 0; x < xSize; x += step)
         {
             for (var y = 0; y < ySize; y += step)
@@ -165,6 +176,7 @@ public class Chunk : MonoBehaviour
                 var stone = currentCell.Stone;
                 var sand = currentCell.Sand;
                 var water = currentCell.Water;
+                var lava = currentCell.Lava;
 
                 meshes[(int) Cell.Type.Stone].color[meshMapIndex].r = sand;
                 meshes[(int) Cell.Type.Stone].vertices[meshMapIndex].y = (stone + sand) * elevationScale;
@@ -178,6 +190,19 @@ public class Chunk : MonoBehaviour
                 else
                 {
                     meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = (stone + sand + water) * elevationScale;
+                    waterVisibility = true;
+                }
+
+
+                meshes[(int) Cell.Type.Lava].color[meshMapIndex].r = lava;
+                if (lava < 0.0001f)
+                {
+                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = 0;
+                }
+                else
+                {
+                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = stone * elevationScale;
+                    lavaVisibility = true;
                 }
             }
         }
@@ -186,9 +211,29 @@ public class Chunk : MonoBehaviour
         meshStone.vertices = meshes[(int) Cell.Type.Stone].vertices;
         meshStone.colors = meshes[(int) Cell.Type.Stone].color;
 
-        var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
-        meshWater.vertices = meshes[(int) Cell.Type.Water].vertices;
-        meshWater.colors = meshes[(int) Cell.Type.Water].color;
+        if (waterVisibility)
+        {
+            meshes[(int) Cell.Type.Water].holder.SetActive(true);
+            var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
+            meshWater.vertices = meshes[(int) Cell.Type.Water].vertices;
+            meshWater.colors = meshes[(int) Cell.Type.Water].color;
+        }
+        else
+        {
+            meshes[(int) Cell.Type.Water].holder.SetActive(false);
+        }
+
+        if (lavaVisibility)
+        {
+            meshes[(int) Cell.Type.Lava].holder.SetActive(true);
+            var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
+            meshLava.vertices = meshes[(int) Cell.Type.Lava].vertices;
+            meshLava.colors = meshes[(int) Cell.Type.Lava].color;
+        }
+        else
+        {
+            meshes[(int) Cell.Type.Lava].holder.SetActive(false);
+        }
 
         //meshStone.RecalculateNormals();
         //meshStone.normals = CalculateNormals(verts, mesh.triangles);
