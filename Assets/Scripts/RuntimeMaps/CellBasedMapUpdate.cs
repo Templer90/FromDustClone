@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Random = System.Random;
 
 
 public class CellBasedMapUpdate : IRuntimeMap
 {
     private Cell[] _map;
+    private Cell[] _otherMap;
 
     private readonly int _mapSize;
     private readonly int _mapSizeSquared;
-    
+
     public PhysicData Physic { get; }
 
     public CellBasedMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
@@ -22,15 +21,24 @@ public class CellBasedMapUpdate : IRuntimeMap
         Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
         Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
 
-        Physic = physicData;//new PhysicData {SandSlopeRatio = 0.001f, SandStiffness = 0.1f};
+        Physic = physicData; //new PhysicData {SandSlopeRatio = 0.001f, SandStiffness = 0.1f};
         _mapSize = heightMapSize;
         _mapSizeSquared = stoneHeightMap.Count;
 
         _map = new Cell[stoneHeightMap.Count];
+        _otherMap = new Cell[stoneHeightMap.Count];
         for (var i = 0; i < stoneHeightMap.Count; i++)
         {
             _map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
+            _otherMap[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
         }
+    }
+
+    private void switchMaps()
+    {
+        var tmp = _map;
+        _map = _otherMap;
+        _otherMap = tmp;
     }
 
     public bool ValidCoord(int x, int y)
@@ -147,6 +155,77 @@ public class CellBasedMapUpdate : IRuntimeMap
             smallerCell.Sand += lithoDiff * hardness;
         }
 
+        void HandleLava(Cell centerCell, int x, int y)
+        {
+            centerCell.Lava -= Physic.LavaCooling;
+           
+            if (centerCell.Lava <= 0.0f)
+            {
+                centerCell.Lava = 0.0f;
+                return;
+            }
+            
+            if (centerCell.Water > 0.0f && centerCell.Lava > 0.0f)
+            {
+                var diff = centerCell.Water - centerCell.Lava;
+                if (centerCell.Water > centerCell.Lava)
+                {
+                    centerCell.Water -= diff;
+                    centerCell.Lava = 0.0f;
+                    centerCell.Stone += diff;
+                    return;
+                }
+                else
+                {
+                    centerCell.Water = 0.0f;
+                    centerCell.Lava -= -diff;
+                    centerCell.Stone += -diff;
+                }
+            }
+
+     
+
+            centerCell.Stone += centerCell.Sand;
+            centerCell.Sand = 0;
+
+            var currentTotalHeight = centerCell.LithoHeight + centerCell.Lava;
+            var lowest = currentTotalHeight;
+
+            for (var k = 0; k < 2; k++)
+            {
+                var smallerCell = centerCell;
+                var index = -1;
+                for (var i = 0; i < kernel.Length; i++)
+                {
+                    var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
+                    var otherCell = _map[otherIndex];
+
+                    var totalNew = otherCell.LithoHeight + otherCell.Lava;
+                    if (totalNew > lowest) continue;
+                    index = i;
+                    lowest = totalNew;
+                    smallerCell = otherCell;
+                }
+
+                //found smaller one
+                if (index == -1) return;
+                var hdiff = currentTotalHeight - lowest;
+                var w = centerCell.Lava;
+
+                if (centerCell.LithoHeight > lowest)
+                {
+                    //splash randomly?
+                    centerCell.Lava = w * Physic.LavaSplashRatio;
+                    smallerCell.Lava += w * (1.0f - Physic.LavaSplashRatio);
+                }
+                else
+                {
+                    centerCell.Lava -= hdiff * Physic.LavaViscosity;
+                    smallerCell.Lava += hdiff * ( /*1.0f - */ Physic.LavaViscosity);
+                }
+            }
+        }
+
         void HandleSand(Cell centerCell, int x, int y)
         {
             if (centerCell.Sand < 0.0f)
@@ -154,29 +233,29 @@ public class CellBasedMapUpdate : IRuntimeMap
                 centerCell.Sand = 0.0f;
                 return;
             }
+
             if (centerCell.Sand < Physic.SandCreationHeight)
             {
                 //centerCell.Sand += Physic.SandCreationSpeed;
             }
 
             if (centerCell.Sand < Physic.SandStiffness) return;
-            
+
             var ratio = Physic.SandSlopeRatio;
             for (var i = 0; i < kernel.Length; i++)
             {
                 if (centerCell.Sand < Physic.SandStiffness) continue;
                 var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
                 var otherCell = _map[otherIndex];
-                
+
                 var centerHeight = centerCell.Stone + centerCell.Sand;
                 var otherHeight = otherCell.Stone + otherCell.Sand;
-                
+
                 if (otherHeight >= centerHeight) continue;
                 var hdiff = centerHeight - otherHeight;
                 centerCell.Sand -= hdiff * ratio;
                 otherCell.Sand += hdiff * ratio;
             }
-
         }
 
         for (var x = 1; x < _mapSize - 1; x++)
@@ -188,6 +267,7 @@ public class CellBasedMapUpdate : IRuntimeMap
 
                 HandleSand(centerCell, x, y);
                 HandleWater(centerCell, x, y);
+                HandleLava(centerCell, x, y);
             }
         }
     }

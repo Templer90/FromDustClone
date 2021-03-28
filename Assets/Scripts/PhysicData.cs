@@ -18,8 +18,14 @@ public class PhysicData
     [Header("Water Settings")] public float WaterViscosity = 0.0000001f;
     public float EvaporationThreshold = 0.0001f;
     public float WaterSplashRatio = 0.1f;
-    public float WaterDiffusion = 0.0f;
+    public float WaterDiffusion = 0.00002f;
 
+    [Header("Lava Settings")] 
+    public float LavaViscosity = 0.0000001f;
+    public float LavaCooling = 0.0001f;
+    public float LavaSplashRatio = 0.1f;
+    public float LavaDiffusion = 0.0f;
+    
     [Header("NavierStokes Settings")] [Min(0)]
     public float dt = 0.2f;
 
@@ -35,21 +41,21 @@ public class PhysicData
         VonNeumannRotated
     }
 
-    public readonly (int, int)[] kernelVonNeumann =
+    public static readonly (int, int)[] kernelVonNeumann =
     {
         (-1, 0),
         (0, -1), (0, +1),
         (+1, 0)
     };
 
-    public readonly (int, int)[] kernelMoore =
+    public static readonly (int, int)[] kernelMoore =
     {
         (-1, -1), (-1, 0), (-1, +1),
         (0, -1), (0, +1),
         (+1, -1), (+1, 0), (+1, +1)
     };
 
-    public readonly (int, int)[] kernelVonNeumannRotated =
+    public static readonly (int, int)[] kernelVonNeumannRotated =
     {
         (-1, -1), (-1, +1),
 
@@ -61,7 +67,7 @@ public class PhysicData
         return GETKernel(UsedKernel);
     }
 
-    public (int, int)[] GETKernel(Kernels used)
+    public static (int, int)[] GETKernel(Kernels used)
     {
         return used switch
         {

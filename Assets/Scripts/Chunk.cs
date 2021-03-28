@@ -165,7 +165,8 @@ public class Chunk : MonoBehaviour
 
         var waterVisibility = false;
         var lavaVisibility = false;
-
+        var kernel = PhysicData.GETKernel(PhysicData.Kernels.Moore);
+        
         for (var x = 0; x < xSize; x += step)
         {
             for (var y = 0; y < ySize; y += step)
@@ -185,7 +186,7 @@ public class Chunk : MonoBehaviour
                 meshes[(int) Cell.Type.Water].color[meshMapIndex].r = water;
                 if (water < 0.0001f)
                 {
-                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = 0;
+                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = currentCell.LithoHeight-0.01f;
                 }
                 else
                 {
@@ -194,14 +195,14 @@ public class Chunk : MonoBehaviour
                 }
 
 
-                meshes[(int) Cell.Type.Lava].color[meshMapIndex].r = lava;
+                meshes[(int) Cell.Type.Lava].color[meshMapIndex].r = stone;
                 if (lava < 0.0001f)
                 {
                     meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = 0;
                 }
                 else
                 {
-                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = stone * elevationScale;
+                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = (stone + lava) * elevationScale;
                     lavaVisibility = true;
                 }
             }
