@@ -23,26 +23,24 @@ public class Cursor : MonoBehaviour
 
     public void OnGUI()
     {
-        RaycastHit hit;
-        if (!Physics.Raycast(_cam.ScreenPointToRay(Input.mousePosition), out hit))
+        if (!Physics.Raycast(_cam.ScreenPointToRay(Input.mousePosition), out var hit))
             return;
 
-        MeshCollider meshCollider = hit.collider as MeshCollider;
+        var meshCollider = hit.collider as MeshCollider;
         if (meshCollider == null || meshCollider.sharedMesh == null)
             return;
 
         worldPosition = hit.point;
         test = _runtimeMap.WorldCoordinatesToCell(hit.point);
-        
-        if (Input.GetMouseButton(0)||Input.GetMouseButton(1))
+
+        if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1)) return;
+        var quantity = amount * (Input.GetMouseButton(0) ? 1 : Input.GetMouseButton(1) ? -1 : 0);
+        var size = quantity / 9;
+        for (var x = -2; x < 1; x++)
         {
-            var quantity = amount* (Input.GetMouseButton(0)?1:Input.GetMouseButton(1)?-1:0);
-            for (var x = -2; x < 1; x++)
+            for (var y = -2; y < 1; y++)
             {
-                for (var y = -2; y < 1; y++)
-                {
-                    _runtimeMap.Add(test.x + x, test.y + y, type, quantity);
-                }
+                _runtimeMap.Add(test.x + x, test.y + y, type, size);
             }
         }
     }

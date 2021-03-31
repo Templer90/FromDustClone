@@ -121,6 +121,7 @@ public static class MeshGenerator
         private int _triangleIndex;
         private int _triangleLOD1Index;
         private int _triangleLOD2Index;
+        
         private int _borderTriangleIndex;
 
         public MeshData(int verticesPerLine)
@@ -129,6 +130,7 @@ public static class MeshGenerator
             _colors32 = new Color32[verticesPerLine * verticesPerLine];
             _colors = new Color[verticesPerLine * verticesPerLine];
             _uvs = new Vector2[verticesPerLine * verticesPerLine];
+            
             _triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
             _lod1Triangles = new int[_triangles.Length / 4];
             _lod2Triangles = new int[_triangles.Length / 16];
@@ -249,7 +251,7 @@ public static class MeshGenerator
             return vertexNormals;
         }
 
-        public Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
+        private Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
         {
             var pointA = (indexA < 0) ? _borderVertices[-indexA - 1] : _vertices[indexA];
             var pointB = (indexB < 0) ? _borderVertices[-indexB - 1] : _vertices[indexB];

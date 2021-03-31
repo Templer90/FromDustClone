@@ -74,7 +74,7 @@ public class RuntimeMapHolder : MonoBehaviour
         var startOffset = Time.frameCount % chunkOffset;
         for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
         {
-            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].Bounds))
+            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].bounds))
             {
                 _chunks[i].Show();
             }
@@ -87,14 +87,15 @@ public class RuntimeMapHolder : MonoBehaviour
         // create projection matrix: 60 FOV, square aspect, near plane 1, far plane 1000
         var matrix = _cam.projectionMatrix;
         var near = LOD2Size;
-        var c = -(_cam.farClipPlane + near) / (_cam.farClipPlane - near);
-        var d = -(2.0F * _cam.farClipPlane * near) / (_cam.farClipPlane - near);
+        var farClipPlane = _cam.farClipPlane;
+        var c = -(farClipPlane + near) / (farClipPlane - near);
+        var d = -(2.0F * farClipPlane * near) / (farClipPlane - near);
         matrix[2, 2] = c;
         matrix[2, 3] = d;
         GeometryUtility.CalculateFrustumPlanes(matrix * _cam.worldToCameraMatrix, _planes);
         for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
         {
-            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].Bounds))
+            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].bounds))
             {
                 _chunks[i].LOD = LODTriangles.LOD.LOD2;
             }

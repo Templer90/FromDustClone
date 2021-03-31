@@ -1,50 +1,119 @@
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
-using UnityEngine.Serialization;
 
 public class SynchronizedThread : MonoBehaviour
 {
-    public long meanUpdateTime = 0;
-    public int lapses = 0;
-
-    private Thread _thread;
-    private IRuntimeMap _runtimeMap;
+    public float meanUpdateTime;
+    public int meanLapsesPerUpdate;
+    public int lapses;
     public bool running;
     public bool pause;
+    public bool synchronize;
+
+    private int _oldLapses = 0;
+    private SynchroThread _thread;
+    private IRuntimeMap _runtimeMap;
 
     public void Start()
     {
         _runtimeMap = gameObject.GetComponent<RuntimeMapHolder>().runtimeMap;
         running = false;
-        _thread = new Thread(DoUpdate) {IsBackground = true};
+        _thread = new SynchroThread(DoUpdate);
+        _thread.Start();
     }
 
     public void Update()
     {
-        if (running) return;
-        running = true;
-        _thread.Start();
+        _thread.synchro = synchronize;
+        
+        meanLapsesPerUpdate = lapses - _oldLapses;
+        meanUpdateTime = meanLapsesPerUpdate * Time.deltaTime;
+        _oldLapses = lapses;
+
+        _thread.Resume();
     }
 
     private void DoUpdate()
     {
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-        watch.Start();
-        while (!pause)
-        {
-            watch.Reset();
-            _runtimeMap.MapUpdate();
-            lapses++;
-            watch.Stop();
-            meanUpdateTime = watch.ElapsedMilliseconds;
-        }
+        _runtimeMap.MapUpdate();
+        lapses++;
     }
-
 
     public void OnDisable()
     {
         if (_thread.IsAlive) _thread.Abort();
+    }
+
+    private class SynchroThread
+    {
+        public bool synchro = false;
+        private bool _isRunning;
+        private Thread _thread;
+        private readonly ManualResetEvent _resetEvent = new ManualResetEvent(true);
+        private readonly Action _action;
+
+        public SynchroThread(Action doUpdate)
+        {
+            _action = doUpdate;
+            _isRunning = false;
+        }
+
+        public bool IsAlive => _thread.IsAlive;
+
+        public void Start()
+        {
+            if (_isRunning) return;
+            _isRunning = true;
+            _thread = new Thread(Process) {IsBackground = true};
+            _thread.Start();
+        }
+
+        private void Process()
+        {
+            while (_isRunning)
+            {
+                _action();
+                if (synchro) Pause();
+                _resetEvent.WaitOne();
+            }
+        }
+
+        public void Pause()
+        {
+            // unset the reset event which will cause the loop to pause
+            _resetEvent.Reset();
+        }
+
+        public void Resume()
+        {
+            // set the reset event which will cause the loop to continue
+            _resetEvent.Set();
+        }
+
+        public void Stop()
+        {
+            // set a flag that will abort the loop
+            _isRunning = false;
+
+            // set the event in case we are currently paused
+            _resetEvent.Set();
+
+            // wait for the thread to finish
+            _thread.Join();
+        }
+
+        public void Abort()
+        {
+            // set a flag that will abort the loop
+            _isRunning = false;
+
+            // set the event in case we are currently paused
+            _resetEvent.Set();
+
+            // wait for the thread to finish
+            _thread.Abort();
+        }
     }
 }

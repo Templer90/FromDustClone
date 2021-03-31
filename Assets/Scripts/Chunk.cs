@@ -9,7 +9,7 @@ public class Chunk : MonoBehaviour
     public int mapSize = 0;
     public float scale = 0;
     public float elevationScale = 10;
-    public Bounds Bounds;
+    public Bounds bounds;
     public LODTriangles.LOD LOD = LODTriangles.LOD.LOD0;
 
 
@@ -22,6 +22,9 @@ public class Chunk : MonoBehaviour
         public LODTriangles lod;
         [NonSerialized] public Vector3[] vertices;
         [NonSerialized] public Color[] color;
+        [NonSerialized] public Vector2[] uv5;
+        
+        
         [NonSerialized] public MeshFilter meshFilter;
     }
 
@@ -55,7 +58,7 @@ public class Chunk : MonoBehaviour
         transform1.name = "Chunk(" + x + "," + y + ")";
         transform1.position = pos;
 
-        Bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 50, halfScale));
+        bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 50, halfScale));
 
 
         //Ensure that meshes is right
@@ -77,14 +80,17 @@ public class Chunk : MonoBehaviour
         var meshStone = meshes[(int) Cell.Type.Stone].meshFilter.mesh;
         meshes[(int) Cell.Type.Stone].vertices = meshStone.vertices;
         meshes[(int) Cell.Type.Stone].color = meshStone.colors;
+        meshes[(int) Cell.Type.Stone].uv5 = meshStone.uv5;
 
         var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
         meshes[(int) Cell.Type.Water].vertices = meshWater.vertices;
         meshes[(int) Cell.Type.Water].color = meshWater.colors;
+        meshes[(int) Cell.Type.Water].uv5 = meshWater.uv5;
 
         var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
         meshes[(int) Cell.Type.Lava].vertices = meshLava.vertices;
         meshes[(int) Cell.Type.Lava].color = meshLava.colors;
+        meshes[(int) Cell.Type.Lava].uv5 = meshLava.uv5;
     }
 
     public void ConstructMeshes()
@@ -165,7 +171,6 @@ public class Chunk : MonoBehaviour
 
         var waterVisibility = false;
         var lavaVisibility = false;
-        var kernel = PhysicData.GETKernel(PhysicData.Kernels.Moore);
         
         for (var x = 0; x < xSize; x += step)
         {
@@ -186,7 +191,7 @@ public class Chunk : MonoBehaviour
                 meshes[(int) Cell.Type.Water].color[meshMapIndex].r = water;
                 if (water < 0.0001f)
                 {
-                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = currentCell.LithoHeight-0.01f;
+                    meshes[(int) Cell.Type.Water].vertices[meshMapIndex].y = 0.0f;
                 }
                 else
                 {
@@ -198,7 +203,7 @@ public class Chunk : MonoBehaviour
                 meshes[(int) Cell.Type.Lava].color[meshMapIndex].r = stone;
                 if (lava < 0.0001f)
                 {
-                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = 0;
+                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = 0.0f;
                 }
                 else
                 {
@@ -211,6 +216,7 @@ public class Chunk : MonoBehaviour
         var meshStone = meshes[(int) Cell.Type.Stone].meshFilter.mesh;
         meshStone.vertices = meshes[(int) Cell.Type.Stone].vertices;
         meshStone.colors = meshes[(int) Cell.Type.Stone].color;
+        meshStone.uv5 = meshes[(int) Cell.Type.Stone].uv5;
 
         if (waterVisibility)
         {
@@ -218,6 +224,7 @@ public class Chunk : MonoBehaviour
             var meshWater = meshes[(int) Cell.Type.Water].meshFilter.mesh;
             meshWater.vertices = meshes[(int) Cell.Type.Water].vertices;
             meshWater.colors = meshes[(int) Cell.Type.Water].color;
+            meshWater.uv5 = meshes[(int) Cell.Type.Water].uv5;
         }
         else
         {
@@ -230,6 +237,7 @@ public class Chunk : MonoBehaviour
             var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
             meshLava.vertices = meshes[(int) Cell.Type.Lava].vertices;
             meshLava.colors = meshes[(int) Cell.Type.Lava].color;
+            meshLava.uv5 = meshes[(int) Cell.Type.Lava].uv5;
         }
         else
         {

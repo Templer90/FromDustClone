@@ -74,6 +74,9 @@
     "m_StickyNoteDatas": [
         {
             "m_Id": "6556b275fb4f4bc382fb06b8939b3ba9"
+        },
+        {
+            "m_Id": "a24115b9085c433f839cb02d41af4a87"
         }
     ],
     "m_Edges": [
@@ -258,6 +261,7 @@
     },
     "m_Path": "Shader Graphs",
     "m_ConcretePrecision": 0,
+    "m_PreviewMode": 2,
     "m_OutputNode": {
         "m_Id": ""
     },
@@ -328,6 +332,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     }
@@ -359,6 +364,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -445,6 +451,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -541,6 +548,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -600,6 +608,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     }
@@ -763,6 +772,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -774,7 +784,7 @@
     "m_Type": "UnityEditor.ShaderGraph.StickyNoteData",
     "m_ObjectId": "6556b275fb4f4bc382fb06b8939b3ba9",
     "m_Title": "New Note",
-    "m_Content": "0:\tWater height\nR: \tNONE\t\nG:\tNONE\nB:\tNONE\nA:\tNONE",
+    "m_Content": "0:\tWater height\nR: \tNONE\t\nG:\tNONE\nB:\tNONE\nA:\tNONE\n\nUV3:\tFlowDir",
     "m_TextSize": 0,
     "m_Theme": 0,
     "m_Position": {
@@ -863,6 +873,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -910,6 +921,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1070,6 +1082,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1108,6 +1121,26 @@
 
 {
     "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.StickyNoteData",
+    "m_ObjectId": "a24115b9085c433f839cb02d41af4a87",
+    "m_Title": "Watch this",
+    "m_Content": "https://www.youtube.com/watch?v=gRq-IdShxpU",
+    "m_TextSize": 0,
+    "m_Theme": 0,
+    "m_Position": {
+        "serializedVersion": "2",
+        "x": 431.00189208984377,
+        "y": -259.3572998046875,
+        "width": 200.0,
+        "height": 160.0
+    },
+    "m_Group": {
+        "m_Id": ""
+    }
+}
+
+{
+    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.BlockNode",
     "m_ObjectId": "a94cc10eb4d24bc0896f322659d001f2",
     "m_Group": {
@@ -1132,6 +1165,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1230,6 +1264,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     }
@@ -1282,6 +1317,8 @@
         "m_GuidSerialized": "3791b207-037f-44e8-88e2-9fab0869ace8"
     },
     "m_Name": "Shallow Water",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Color_c6347211389343c889a88a38ec862631",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
@@ -1324,6 +1361,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1370,6 +1408,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     }
@@ -1401,6 +1440,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1415,6 +1455,8 @@
         "m_GuidSerialized": "01888357-890a-490e-8f6d-a17e1a5c7492"
     },
     "m_Name": "Deep Water",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Color_cfb7b18a2a5a4614b57ab9a3c2e0ab04",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
@@ -1472,6 +1514,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 2,
     "m_CustomColors": {
         "m_SerializableColors": []
     }
@@ -1503,6 +1546,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1535,6 +1579,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
@@ -1564,6 +1609,8 @@
         "m_GuidSerialized": "c3888ef2-52dc-4820-a7aa-dd3de459218d"
     },
     "m_Name": "Threshold",
+    "m_DefaultRefNameVersion": 0,
+    "m_RefNameGeneratedByDisplayName": "",
     "m_DefaultReferenceName": "Vector1_e4eba7e2ec8f426c863a718592666269",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
@@ -1629,6 +1676,7 @@
     "synonyms": [],
     "m_Precision": 0,
     "m_PreviewExpanded": true,
+    "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
     },
