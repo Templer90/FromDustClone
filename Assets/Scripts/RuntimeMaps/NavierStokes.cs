@@ -77,10 +77,17 @@ public class NavierStokes : IRuntimeMap
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ValidCoord(int x, int y)
     {
         var pos = y * _mapSize + x;
-        return pos >= 0 && pos < _mapSizeSquared;
+        return ValidCoord(pos);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ValidCoord(int index)
+    {
+        return index >= 0 && index < _mapSizeSquared;
     }
 
     public Cell CellAt(int x, int y)
@@ -92,6 +99,12 @@ public class NavierStokes : IRuntimeMap
         //c.Sand = s[i];
         //c.Lava = c.Lava;
         return c;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Cell CellAt(int index)
+    {
+        return StoneHeight[index];
     }
 
     public float WholeAt(int x, int y)
@@ -205,7 +218,8 @@ public class NavierStokes : IRuntimeMap
     }
 
 
-    private void Advect(int b, IList<float> d, IReadOnlyList<float> d0, IReadOnlyList<float> velocX, IReadOnlyList<float> velocY, float dt)
+    private void Advect(int b, IList<float> d, IReadOnlyList<float> d0, IReadOnlyList<float> velocX,
+        IReadOnlyList<float> velocY, float dt)
     {
         float i0, i1, j0, j1;
 
@@ -232,7 +246,7 @@ public class NavierStokes : IRuntimeMap
                 if (x > Nfloat + 0.5f) x = Nfloat + 0.5f;
                 i0 = Mathf.Floor(x);
                 i1 = i0 + 1.0f;
-                
+
                 if (y < 0.5f) y = 0.5f;
                 if (y > Nfloat + 0.5f) y = Nfloat + 0.5f;
                 j0 = Mathf.Floor(y);
@@ -265,7 +279,7 @@ public class NavierStokes : IRuntimeMap
         {
             x[IX(i, 0)] = b == 2 ? -x[IX(i, 1)] : x[IX(i, 1)];
             x[IX(i, _mapSize - 1)] = b == 2 ? -x[IX(i, _mapSize - 2)] : x[IX(i, _mapSize - 2)];
- 
+
             x[IX(0, i)] = b == 1 ? -x[IX(1, i)] : x[IX(1, i)];
             x[IX(_mapSize - 1, i)] = b == 1 ? -x[IX(_mapSize - 2, i)] : x[IX(_mapSize - 2, i)];
         }
@@ -273,7 +287,8 @@ public class NavierStokes : IRuntimeMap
         x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
         x[IX(0, _mapSize - 1)] = 0.5f * (x[IX(1, _mapSize - 1)] + x[IX(0, _mapSize - 2)]);
         x[IX(_mapSize - 1, 0)] = 0.5f * (x[IX(_mapSize - 2, 0)] + x[IX(_mapSize - 1, 1)]);
-        x[IX(_mapSize - 1, _mapSize - 1)] = 0.5f * (x[IX(_mapSize - 2, _mapSize - 1)] + x[IX(_mapSize - 1, _mapSize - 2)]);
+        x[IX(_mapSize - 1, _mapSize - 1)] =
+            0.5f * (x[IX(_mapSize - 2, _mapSize - 1)] + x[IX(_mapSize - 1, _mapSize - 2)]);
     }
 
     public void MapUpdate()

@@ -5,8 +5,7 @@ using UnityEngine.Rendering.VirtualTexturing;
 
 public static class MeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(Func<int, int, float> heightMapFunc, int meshSize,
-        float heightMultiplier, float scale)
+    public static MeshData GenerateTerrainMesh(Func<int, int, (float, int)> heightMapFunc, int meshSize, float scale)
     {
         var internalSize = meshSize + 1;
         var borderedSize = internalSize + 2;
@@ -46,11 +45,11 @@ public static class MeshGenerator
                 var percent = new Vector2((x - 1) / ((float) internalSize - 1), (y - 1) / ((float) internalSize - 1));
                 var vertexPosition = new Vector3(percent.x, 0, percent.y) * scale;
 
-                var newHeight = heightMapFunc(x, y);
-                if (!float.IsNaN(newHeight)) height = newHeight;
-                vertexPosition.y = height * heightMultiplier;
+                var (heightValue, mapIndex) = heightMapFunc(x, y);
+                if (!float.IsNaN(heightValue)) height = heightValue;
+                vertexPosition.y = height;
 
-                meshBuffer.AddVertex(vertexPosition, percent, vertexIndex);
+                meshBuffer.AddVertex(vertexPosition, percent, vertexIndex, mapIndex);
 
                 if (x < borderedSize - 1 && y < borderedSize - 1)
                 {
@@ -116,12 +115,13 @@ public static class MeshGenerator
         private readonly Vector2[] _uvs;
 
         private readonly Vector3[] _borderVertices;
+        private readonly int[] _borderVerticesIndices;
         private readonly int[] _borderTriangles;
 
         private int _triangleIndex;
         private int _triangleLOD1Index;
         private int _triangleLOD2Index;
-        
+
         private int _borderTriangleIndex;
 
         public MeshData(int verticesPerLine)
@@ -130,12 +130,13 @@ public static class MeshGenerator
             _colors32 = new Color32[verticesPerLine * verticesPerLine];
             _colors = new Color[verticesPerLine * verticesPerLine];
             _uvs = new Vector2[verticesPerLine * verticesPerLine];
-            
+
             _triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6];
             _lod1Triangles = new int[_triangles.Length / 4];
             _lod2Triangles = new int[_triangles.Length / 16];
 
             _borderVertices = new Vector3[verticesPerLine * 4 + 4];
+            _borderVerticesIndices = new int[_borderVertices.Length];
             _borderTriangles = new int[24 * verticesPerLine];
         }
 
@@ -147,14 +148,15 @@ public static class MeshGenerator
                 checkedLOD2[i] = _lod2Triangles[i];
             }
 
-            return new LODTriangles(_triangles, _lod1Triangles, checkedLOD2);
+            return new LODTriangles(_triangles, _lod1Triangles, checkedLOD2, _borderVertices, _borderVerticesIndices, _borderTriangles);
         }
 
-        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex)
+        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex, int mapIndex)
         {
             if (vertexIndex < 0)
             {
                 _borderVertices[-vertexIndex - 1] = vertexPosition;
+                _borderVerticesIndices[-vertexIndex - 1] = mapIndex;
             }
             else
             {
@@ -269,10 +271,11 @@ public static class MeshGenerator
                 vertices = _vertices,
                 triangles = _triangles,
                 uv = _uvs,
-                normals = CalculateNormals(),
+                //normals = CalculateNormals(),
                 colors32 = _colors32,
                 colors = _colors
             };
+            mesh.RecalculateNormals();
             mesh.MarkDynamic();
             return mesh;
         }

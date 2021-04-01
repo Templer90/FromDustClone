@@ -58,6 +58,7 @@
      <Compile Include="Assets\Scripts\PhysicData.cs" />
      <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <Compile Include="Assets\Scripts\linearSolver.cs" />
+     <Compile Include="Assets\Scripts\Chunk.MeshData.cs" />
      <None Include="Assets\Scripts\ComputeShaders\HeightMap.compute" />
      <Reference Include="UnityEngine">
      <HintPath>/home/eric/Unity/Hub/Editor/2021.1.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>

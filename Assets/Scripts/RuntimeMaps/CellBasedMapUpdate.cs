@@ -31,16 +31,28 @@ public class CellBasedMapUpdate : IRuntimeMap
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ValidCoord(int x, int y)
     {
         var pos = y * _mapSize + x;
-        return pos >= 0 && pos < _map.Length;
+        return ValidCoord(pos);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ValidCoord(int index)
+    {
+        return index >= 0 && index < _map.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Cell CellAt(int x, int y)
     {
         return _map[y * _mapSize + x];
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Cell CellAt(int index)
+    {
+        return _map[index];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -16,6 +16,18 @@ public class Cell
     public float WholeHeight => Stone + Sand + Water + Lava;
     public float LithoHeight => Stone + Sand;
 
+    public float getValue(Type type)
+    {
+        return type switch
+        {
+            Type.Stone => Stone,
+            Type.Sand => Sand,
+            Type.Water => Water,
+            Type.Lava => Lava,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
     public Vector2 getFlowDir(Type type)
     {
         return type switch
@@ -26,7 +38,7 @@ public class Cell
             Type.Lava => LavaFlow,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
-    } 
+    }
 
     public enum Type
     {
