@@ -13,45 +13,34 @@ public partial class Chunk
         [NonSerialized] public Vector3[] vertices;
         [NonSerialized] public Color[] color;
         [NonSerialized] public Vector2[] uv5;
-
-
         [NonSerialized] public MeshFilter meshFilter;
 
-        public void RecalculateNormals(IRuntimeMap map, float elevationScale)
+        public void RecalculateAndRefresh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
         {
-            Func<int, float> heightFunc = index => map.CellAt(index).getValue(Type) * elevationScale;
-
-            switch (Type)
-            {
-                case Cell.Type.Water:
-                    heightFunc = index =>
-                    {
-                        var c = map.CellAt(index);
-                        return (c.LithoHeight + c.Water) * elevationScale;
-                    };
-                    break;
-                case Cell.Type.Stone:
-                    heightFunc = index =>
-                    {
-                        var c = map.CellAt(index);
-                        return (c.LithoHeight) * elevationScale;
-                    };
-                    break;
-                case Cell.Type.Sand:
-                    break;
-                case Cell.Type.Lava:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            meshFilter.mesh.normals = lod.RecalculateNormals(vertices, heightFunc);
+            RecalculateNormals(map, heightAtCell);
+            var meshStone = meshFilter.mesh;
+            meshStone.vertices = vertices;
+            meshStone.colors = color;
+            meshStone.uv5 = uv5;
+        }
+        
+        public void RefreshMesh()
+        {
+            var meshStone = meshFilter.mesh;
+            meshStone.vertices = vertices;
+            meshStone.colors = color;
+            meshStone.uv5 = uv5;
+        }
+        
+        public void RecalculateNormals(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
+        {
+            meshFilter.mesh.normals = lod.RecalculateNormals( vertices, (index) => heightAtCell(map.CellAt(index)).Item1);
         }
 
-        public void RecalculateNormalsSharedMesh(IRuntimeMap map, float elevationScale)
+        public void RecalculateNormalsSharedMesh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
         {
-            meshFilter.sharedMesh.normals = lod.RecalculateNormals( meshFilter.sharedMesh.vertices,
-                (index) => map.CellAt(index).getValue(Type) * elevationScale);
+            meshFilter.sharedMesh.normals = lod.RecalculateNormals(meshFilter.sharedMesh.vertices,
+                (index) => heightAtCell(map.CellAt(index)).Item1);
         }
     }
 }

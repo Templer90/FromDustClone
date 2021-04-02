@@ -1,15 +1,15 @@
 using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public partial class Chunk : MonoBehaviour
 {
     [Header("Mesh Settings")] public Vector2Int coords = new Vector2Int(0, 0);
-    public int mapSize = 0;
-    public float scale = 0;
+    public int mapSize;
+    public float scale;
     public float elevationScale = 10;
     public Bounds bounds;
+    // ReSharper disable once InconsistentNaming
     public LODTriangles.LOD LOD = LODTriangles.LOD.LOD0;
 
     public MeshData[] meshes =
@@ -129,12 +129,30 @@ public partial class Chunk : MonoBehaviour
         }
     }
 
+    private (float, bool) StoneFunc(Cell currentCell)
+    {
+        return (currentCell.LithoHeight * elevationScale, true);
+    }
+
+    private (float, bool) WaterFunc(Cell currentCell)
+    {
+        return currentCell.Water <= 0.0001f ? (0.0f, false) : ((currentCell.LithoHeight + currentCell.Water) * elevationScale, true);
+    }
+
+    private (float, bool) LavaFunc(Cell currentCell)
+    {
+        return currentCell.Lava <= 0.0001f ? (0.0f, false) : ((currentCell.LithoHeight + currentCell.Lava) * elevationScale, true);
+    }
+
     public void UpdateMeshes()
     {
         if (!gameObject.activeSelf) return;
 
-        meshes[(int) Cell.Type.Stone].lod
-            .SwitchTriangles(meshes[(int) Cell.Type.Stone].meshFilter.mesh, LOD);
+        var stoneMeshData = meshes[(int) Cell.Type.Stone];
+        var waterMeshData = meshes[(int) Cell.Type.Water];
+        var lavaMeshData = meshes[(int) Cell.Type.Lava];
+
+        stoneMeshData.lod.SwitchTriangles(meshes[(int) Cell.Type.Stone].meshFilter.mesh, LOD);
 
         var numChunks = (_mainSize / mapSize);
         var xSize = mapSize + ((coords.x < numChunks) ? 1 : 0);
@@ -154,10 +172,6 @@ public partial class Chunk : MonoBehaviour
 
         var waterVisibility = false;
         var lavaVisibility = false;
-
-        var stoneMeshData = meshes[(int) Cell.Type.Stone];
-        var waterMeshData = meshes[(int) Cell.Type.Water];
-
         for (var x = 0; x < xSize; x += step)
         {
             for (var y = 0; y < ySize; y += step)
@@ -165,56 +179,30 @@ public partial class Chunk : MonoBehaviour
                 var meshMapIndex = y * maxSize + x;
                 var currentCell = _map.CellAt(offsetX + x, offsetY + y);
 
-                var stone = currentCell.Stone;
-                var sand = currentCell.Sand;
-                var water = currentCell.Water;
-                var lava = currentCell.Lava;
-
-                stoneMeshData.color[meshMapIndex].r = sand;
-                stoneMeshData.vertices[meshMapIndex].y = (stone + sand) * elevationScale;
+                stoneMeshData.color[meshMapIndex].r = currentCell.Sand;
+                var (stoneHeight, _) = StoneFunc(currentCell);
+                stoneMeshData.vertices[meshMapIndex].y = stoneHeight;
 
 
-                waterMeshData.color[meshMapIndex].r = water;
-                if (water < 0.0001f)
-                {
-                    waterMeshData.vertices[meshMapIndex].y = 0.0f;
-                }
-                else
-                {
-                    waterMeshData.vertices[meshMapIndex].y = (stone + sand + water) * elevationScale;
-                    waterVisibility = true;
-                }
+                waterMeshData.color[meshMapIndex].r = currentCell.Water;
+                var (waterHeight, visibleWater) = WaterFunc(currentCell);
+                waterMeshData.vertices[meshMapIndex].y = waterHeight;
+                waterVisibility |= visibleWater;
 
 
-                meshes[(int) Cell.Type.Lava].color[meshMapIndex].r = stone;
-                if (lava < 0.0001f)
-                {
-                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = 0.0f;
-                }
-                else
-                {
-                    meshes[(int) Cell.Type.Lava].vertices[meshMapIndex].y = (stone + lava) * elevationScale;
-                    lavaVisibility = true;
-                }
+                lavaMeshData.color[meshMapIndex].r = currentCell.Stone;
+                var (lavaHeight, visibleLava) = LavaFunc(currentCell);
+                lavaMeshData.vertices[meshMapIndex].y = lavaHeight;
+                lavaVisibility |= visibleLava;
             }
         }
-
-        var meshStone = stoneMeshData.meshFilter.mesh;
-        meshStone.vertices = stoneMeshData.vertices;
-        meshStone.colors = stoneMeshData.color;
-        meshStone.uv5 = stoneMeshData.uv5;
-
-       // stoneMeshData.RecalculateNormals(_map, elevationScale);
+        
+        stoneMeshData.RecalculateAndRefresh(_map, StoneFunc);
 
         if (waterVisibility)
         {
             waterMeshData.holder.SetActive(true);
-            var meshWater = waterMeshData.meshFilter.mesh;
-            meshWater.vertices = waterMeshData.vertices;
-            meshWater.colors = waterMeshData.color;
-            meshWater.uv5 = waterMeshData.uv5;
-
-            waterMeshData.RecalculateNormals(_map, elevationScale);
+            waterMeshData.RecalculateAndRefresh(_map, WaterFunc);
         }
         else
         {
@@ -233,8 +221,6 @@ public partial class Chunk : MonoBehaviour
         {
             meshes[(int) Cell.Type.Lava].holder.SetActive(false);
         }
-
-        //meshStone.normals = CalculateNormals(verts, mesh.triangles);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -276,7 +262,7 @@ public partial class Chunk : MonoBehaviour
         mesh.name = coords.x + " " + coords.y;
         meshData.meshFilter.sharedMesh = mesh;
         meshData.lod = generatedRawMeshData.GenLODTriangles();
-        meshData.RecalculateNormalsSharedMesh(_map, elevationScale);
+        meshData.RecalculateNormalsSharedMesh(_map, StoneFunc);
 
         if (!meshData.holder.transform.GetComponent<MeshCollider>()) return;
         var coll = meshData.holder.transform.gameObject.GetComponent<MeshCollider>();

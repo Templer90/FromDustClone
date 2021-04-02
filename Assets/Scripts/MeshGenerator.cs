@@ -148,7 +148,8 @@ public static class MeshGenerator
                 checkedLOD2[i] = _lod2Triangles[i];
             }
 
-            return new LODTriangles(_triangles, _lod1Triangles, checkedLOD2, _borderVertices, _borderVerticesIndices, _borderTriangles);
+            return new LODTriangles(_triangles, _lod1Triangles, checkedLOD2, _borderVertices, _borderVerticesIndices,
+                _borderTriangles);
         }
 
         public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex, int mapIndex)
@@ -202,68 +203,6 @@ public static class MeshGenerator
             }
         }
 
-        public Vector3[] CalculateNormals()
-        {
-            var vertexNormals = new Vector3[_vertices.Length];
-            var triangleCount = _triangles.Length / 3;
-            for (var i = 0; i < triangleCount; i++)
-            {
-                var normalTriangleIndex = i * 3;
-                var vertexIndexA = _triangles[normalTriangleIndex];
-                var vertexIndexB = _triangles[normalTriangleIndex + 1];
-                var vertexIndexC = _triangles[normalTriangleIndex + 2];
-
-                var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
-                vertexNormals[vertexIndexA] += triangleNormal;
-                vertexNormals[vertexIndexB] += triangleNormal;
-                vertexNormals[vertexIndexC] += triangleNormal;
-            }
-
-            var borderTriangleCount = _borderTriangles.Length / 3;
-            for (var i = 0; i < borderTriangleCount; i++)
-            {
-                var normalTriangleIndex = i * 3;
-                var vertexIndexA = _borderTriangles[normalTriangleIndex];
-                var vertexIndexB = _borderTriangles[normalTriangleIndex + 1];
-                var vertexIndexC = _borderTriangles[normalTriangleIndex + 2];
-
-                var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
-                if (vertexIndexA >= 0)
-                {
-                    vertexNormals[vertexIndexA] += triangleNormal;
-                }
-
-                if (vertexIndexB >= 0)
-                {
-                    vertexNormals[vertexIndexB] += triangleNormal;
-                }
-
-                if (vertexIndexC >= 0)
-                {
-                    vertexNormals[vertexIndexC] += triangleNormal;
-                }
-            }
-
-
-            for (var i = 0; i < vertexNormals.Length; i++)
-            {
-                vertexNormals[i].Normalize();
-            }
-
-            return vertexNormals;
-        }
-
-        private Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
-        {
-            var pointA = (indexA < 0) ? _borderVertices[-indexA - 1] : _vertices[indexA];
-            var pointB = (indexB < 0) ? _borderVertices[-indexB - 1] : _vertices[indexB];
-            var pointC = (indexC < 0) ? _borderVertices[-indexC - 1] : _vertices[indexC];
-
-            var sideAb = pointB - pointA;
-            var sideAc = pointC - pointA;
-            return Vector3.Cross(sideAb, sideAc).normalized;
-        }
-
         public Mesh CreateMesh()
         {
             var mesh = new Mesh
@@ -271,7 +210,6 @@ public static class MeshGenerator
                 vertices = _vertices,
                 triangles = _triangles,
                 uv = _uvs,
-                //normals = CalculateNormals(),
                 colors32 = _colors32,
                 colors = _colors
             };

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -68,7 +69,6 @@ public class LODTriangles
 
         _oldLOD = lodLevel;
     }
-
 
     public Vector3[] RecalculateNormals(Vector3[] vertices, Func<int, float> heightMapFunc)
     {
