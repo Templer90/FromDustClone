@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.IO.MemoryMappedFiles;
 using UnityEngine;
-using UnityEngine.Serialization;
+
 
 public class Cursor : MonoBehaviour
 {
@@ -10,6 +7,7 @@ public class Cursor : MonoBehaviour
     public Vector2Int test;
     public GameObject positionSphere;
     public float amount = 0.1f;
+    public float size = 3;
     public Cell.Type type = Cell.Type.Water;
 
     private Camera _cam;
@@ -35,12 +33,12 @@ public class Cursor : MonoBehaviour
 
         if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1)) return;
         var quantity = amount * (Input.GetMouseButton(0) ? 1 : Input.GetMouseButton(1) ? -1 : 0);
-        var size = quantity / 9;
-        for (var x = -2; x < 1; x++)
+        var load = quantity / (size*size);
+        for (var x = Mathf.FloorToInt(size/-2.0f); x < size/2.0f; x++)
         {
-            for (var y = -2; y < 1; y++)
+            for (var y = Mathf.FloorToInt(size/-2.0f); y < size/2.0f; y++)
             {
-                _runtimeMap.Add(test.x + x, test.y + y, type, size);
+                _runtimeMap.Add(test.x + x, test.y + y, type, load);
             }
         }
     }
