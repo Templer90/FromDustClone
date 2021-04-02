@@ -210,6 +210,7 @@ public static class MeshGenerator
                 vertices = _vertices,
                 triangles = _triangles,
                 uv = _uvs,
+                uv3 = new Vector2[_vertices.Length],
                 colors32 = _colors32,
                 colors = _colors
             };

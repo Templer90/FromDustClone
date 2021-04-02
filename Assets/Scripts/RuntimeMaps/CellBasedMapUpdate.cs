@@ -127,20 +127,20 @@ public class CellBasedMapUpdate : IRuntimeMap
                 smallerCell = otherCell;
             }
 
-            centerCell.WaterFlow.X = 0;
-            centerCell.WaterFlow.Y = 0;
+            centerCell.WaterFlow.x = 0;
+            centerCell.WaterFlow.y = 0;
 
             //found smaller one
             if (index == -1) return;
 
-            var lithoDiff = centerCell.LithoHeight - smallerCell.LithoHeight;
-            var sandDiff = centerCell.Stone - smallerCell.Water;
-            var hdiff = currentTotalHeight - lowest;
+            //var lithoDiff = centerCell.LithoHeight - smallerCell.LithoHeight;
+            //var sandDiff = centerCell.Stone - smallerCell.Water;
+            var heightDiff = currentTotalHeight - lowest;
             var w = centerCell.Water;
 
             var (xFlow, yFlow) = kernel[index];
-            centerCell.WaterFlow.X = yFlow * hdiff;
-            centerCell.WaterFlow.Y = xFlow * hdiff;
+            centerCell.WaterFlow.x = yFlow * heightDiff;
+            centerCell.WaterFlow.y = xFlow * heightDiff;
 
             if (centerCell.LithoHeight > lowest)
             {
@@ -150,8 +150,8 @@ public class CellBasedMapUpdate : IRuntimeMap
             }
             else
             {
-                centerCell.Water -= hdiff * Physic.WaterViscosity;
-                smallerCell.Water += hdiff * ( /*1.0f - */ Physic.WaterViscosity);
+                centerCell.Water -= heightDiff * Physic.WaterViscosity;
+                smallerCell.Water += heightDiff * ( /*1.0f - */ Physic.WaterViscosity);
             }
         }
 

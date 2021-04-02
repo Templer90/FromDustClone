@@ -129,7 +129,7 @@ public partial class Chunk : MonoBehaviour
             : ((currentCell.LithoHeight + currentCell.Lava) * elevationScale, true);
     }
 
-    public void UpdateMeshes()
+    private void UpdateMeshes()
     {
         if (!gameObject.activeSelf) return;
 
@@ -174,6 +174,7 @@ public partial class Chunk : MonoBehaviour
                 waterMeshData.color[meshMapIndex].r = currentCell.Water;
                 var (waterHeight, visibleWater) = WaterFunc(currentCell);
                 waterMeshData.vertices[meshMapIndex].y = waterHeight;
+                waterMeshData.uv3[meshMapIndex] = currentCell.WaterFlow;
                 waterVisibility |= visibleWater;
 
 
@@ -202,7 +203,7 @@ public partial class Chunk : MonoBehaviour
             var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
             meshLava.vertices = meshes[(int) Cell.Type.Lava].vertices;
             meshLava.colors = meshes[(int) Cell.Type.Lava].color;
-            meshLava.uv5 = meshes[(int) Cell.Type.Lava].uv5;
+            meshLava.uv3 = meshes[(int) Cell.Type.Lava].uv3;
         }
         else
         {

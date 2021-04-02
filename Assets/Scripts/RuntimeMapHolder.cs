@@ -20,7 +20,7 @@ public class RuntimeMapHolder : MonoBehaviour
     private int _chunksize = 10;
     private float _scale = 20;
     private Chunk[] _chunks;
-    private Plane[] _planes = new Plane[6];
+    private readonly Plane[] _planes = new Plane[6];
 
     public enum MapTypes
     {

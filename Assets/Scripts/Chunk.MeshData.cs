@@ -12,7 +12,7 @@ public partial class Chunk
         public LODTriangles lod;
         [NonSerialized] public Vector3[] vertices;
         [NonSerialized] public Color[] color;
-        [NonSerialized] public Vector2[] uv5;
+        [NonSerialized] public Vector2[] uv3;
         [NonSerialized] public MeshFilter meshFilter;
         
         public void FromOwnMeshFilter()
@@ -20,7 +20,7 @@ public partial class Chunk
             var mesh = meshFilter.mesh;
             vertices = mesh.vertices;
             color = mesh.colors;
-            uv5 = mesh.uv5;
+            uv3 = mesh.uv3;
         }
 
         public void RecalculateAndRefresh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
@@ -29,7 +29,7 @@ public partial class Chunk
             RecalculateNormals(map, heightAtCell);
             mesh.vertices = vertices;
             mesh.colors = color;
-            mesh.uv5 = uv5;
+            mesh.uv3 = uv3;
             mesh.MarkModified();
         }
         
@@ -38,7 +38,7 @@ public partial class Chunk
             var mesh = meshFilter.mesh;
             mesh.vertices = vertices;
             mesh.colors = color;
-            mesh.uv5 = uv5;
+            mesh.uv3 = uv3;
             mesh.MarkModified();
         }
         
