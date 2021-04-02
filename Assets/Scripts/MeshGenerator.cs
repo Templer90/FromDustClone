@@ -213,7 +213,7 @@ public static class MeshGenerator
                 colors32 = _colors32,
                 colors = _colors
             };
-            mesh.RecalculateNormals();
+            // mesh.RecalculateNormals();
             mesh.MarkDynamic();
             return mesh;
         }

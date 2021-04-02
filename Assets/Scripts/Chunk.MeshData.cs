@@ -14,22 +14,32 @@ public partial class Chunk
         [NonSerialized] public Color[] color;
         [NonSerialized] public Vector2[] uv5;
         [NonSerialized] public MeshFilter meshFilter;
+        
+        public void FromOwnMeshFilter()
+        {
+            var mesh = meshFilter.mesh;
+            vertices = mesh.vertices;
+            color = mesh.colors;
+            uv5 = mesh.uv5;
+        }
 
         public void RecalculateAndRefresh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
         {
+            var mesh = meshFilter.mesh;
             RecalculateNormals(map, heightAtCell);
-            var meshStone = meshFilter.mesh;
-            meshStone.vertices = vertices;
-            meshStone.colors = color;
-            meshStone.uv5 = uv5;
+            mesh.vertices = vertices;
+            mesh.colors = color;
+            mesh.uv5 = uv5;
+            mesh.MarkModified();
         }
         
         public void RefreshMesh()
         {
-            var meshStone = meshFilter.mesh;
-            meshStone.vertices = vertices;
-            meshStone.colors = color;
-            meshStone.uv5 = uv5;
+            var mesh = meshFilter.mesh;
+            mesh.vertices = vertices;
+            mesh.colors = color;
+            mesh.uv5 = uv5;
+            mesh.MarkModified();
         }
         
         public void RecalculateNormals(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
@@ -39,8 +49,7 @@ public partial class Chunk
 
         public void RecalculateNormalsSharedMesh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
         {
-            meshFilter.sharedMesh.normals = lod.RecalculateNormals(meshFilter.sharedMesh.vertices,
-                (index) => heightAtCell(map.CellAt(index)).Item1);
+            meshFilter.sharedMesh.normals = lod.RecalculateNormals(meshFilter.sharedMesh.vertices,(index) => heightAtCell(map.CellAt(index)).Item1);
         }
     }
 }
