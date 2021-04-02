@@ -26,10 +26,10 @@ public class PhysicData
     public float LavaSplashRatio = 0.1f;
     public float LavaDiffusion = 0.0f;
     
-    [Header("NavierStokes Settings")] [Min(0)]
-    public float dt = 0.2f;
-
+    [Header("NavierStokes Settings")] 
+    [Min(0)] public float dt = 0.2f;
     [Min(0)] public int iter = 1;
+    [Min(0)]public float gravity = 1f;
 
 
     public Kernels UsedKernel = Kernels.VonNeumann;

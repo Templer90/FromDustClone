@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 
@@ -31,12 +32,37 @@ public class Cursor : MonoBehaviour
         worldPosition = hit.point;
         test = _runtimeMap.WorldCoordinatesToCell(hit.point);
 
+      
         if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1)) return;
-        var quantity = amount * (Input.GetMouseButton(0) ? 1 : Input.GetMouseButton(1) ? -1 : 0);
-        var load = quantity / (size*size);
-        for (var x = Mathf.FloorToInt(size/-2.0f); x < size/2.0f; x++)
+        HandleGeneration();
+    }
+
+    public void Update()
+    {
+        if (Input.GetMouseButtonDown(2)) HandleChange();
+    }
+
+    private void HandleChange()
+    {
+        
+        if (type == Cell.Type.Lava)
         {
-            for (var y = Mathf.FloorToInt(size/-2.0f); y < size/2.0f; y++)
+            type = Cell.Type.Stone;
+        }
+        else
+        {
+            type = (Cell.Type) ((int) type + 1);
+        }
+        Debug.Log(type);
+    }
+
+    private void HandleGeneration()
+    {
+        var quantity = amount * (Input.GetMouseButton(0) ? 1 : Input.GetMouseButton(1) ? -1 : 0);
+        var load = quantity / (size * size);
+        for (var x = Mathf.FloorToInt(size / -2.0f); x < size / 2.0f; x++)
+        {
+            for (var y = Mathf.FloorToInt(size / -2.0f); y < size / 2.0f; y++)
             {
                 _runtimeMap.Add(test.x + x, test.y + y, type, load);
             }

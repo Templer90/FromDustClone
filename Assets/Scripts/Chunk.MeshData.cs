@@ -25,12 +25,8 @@ public partial class Chunk
 
         public void RecalculateAndRefresh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
         {
-            var mesh = meshFilter.mesh;
             RecalculateNormals(map, heightAtCell);
-            mesh.vertices = vertices;
-            mesh.colors = color;
-            mesh.uv3 = uv3;
-            mesh.MarkModified();
+            RefreshMesh();
         }
         
         public void RefreshMesh()

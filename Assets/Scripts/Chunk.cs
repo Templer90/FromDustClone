@@ -200,10 +200,7 @@ public partial class Chunk : MonoBehaviour
         if (lavaVisibility)
         {
             meshes[(int) Cell.Type.Lava].holder.SetActive(true);
-            var meshLava = meshes[(int) Cell.Type.Lava].meshFilter.mesh;
-            meshLava.vertices = meshes[(int) Cell.Type.Lava].vertices;
-            meshLava.colors = meshes[(int) Cell.Type.Lava].color;
-            meshLava.uv3 = meshes[(int) Cell.Type.Lava].uv3;
+            meshes[(int) Cell.Type.Lava].RefreshMesh();
         }
         else
         {

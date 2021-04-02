@@ -1,7 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+
 using UnityEngine;
 
 public class RuntimeMapHolder : MonoBehaviour
@@ -12,6 +11,7 @@ public class RuntimeMapHolder : MonoBehaviour
     public PhysicData data;
     [Range(-0.1f, 10)] public float timer = 1.0f;
     [Min(1)] public int chunkOffset = 1;
+    // ReSharper disable once InconsistentNaming
     [Min(1)] public float LOD2Size = 300;
 
     private float _counter = 0;
@@ -51,13 +51,7 @@ public class RuntimeMapHolder : MonoBehaviour
         data = newMapUpdate.Physic;
         return newMapUpdate;
     }
-
-
-    public float getValueAt(int x, int y)
-    {
-        return runtimeMap.CellAt(x, y).WholeHeight;
-    }
-
+    
     public void Add(int x, int y, Cell.Type type, float amount)
     {
         if (!runtimeMap.ValidCoord(x, y)) return;
@@ -105,8 +99,6 @@ public class RuntimeMapHolder : MonoBehaviour
             }
         }
     }
-
-    public Matrix4x4 test;
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)
     {
