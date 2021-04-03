@@ -41,9 +41,20 @@ public class SynchronizedThread : MonoBehaviour
         lapses++;
     }
 
+    public void KillThread()
+    {
+        if (_thread == null) return;
+        if (_thread.IsAlive) _thread.Abort();
+    }
+
     public void OnDisable()
     {
-        if (_thread.IsAlive) _thread.Abort();
+        KillThread();
+    }
+
+    public void OnApplicationQuit()
+    {
+        KillThread(); 
     }
 
     private class SynchroThread

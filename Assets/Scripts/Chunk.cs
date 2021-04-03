@@ -12,6 +12,7 @@ public partial class Chunk : MonoBehaviour
 
     // ReSharper disable once InconsistentNaming
     public LODTriangles.LOD LOD = LODTriangles.LOD.LOD0;
+    private static int[] _lodStepIncrements;
 
     public MeshData[] meshes =
     {
@@ -21,10 +22,22 @@ public partial class Chunk : MonoBehaviour
         new MeshData {Type = Cell.Type.Lava}
     };
 
+    private struct InternalData
+    {
+        public int numChunks;
+        public int xSize;
+        public int ySize;
+        public int maxSize;
+        public int offsetX;
+        public int offsetY;
+    }
+
     // Internal
     private IRuntimeMap _map;
     private int _mainSize; //Side length of the whole Map
-
+    private InternalData _internalData;
+    private float _counter;
+    private const float StoneNormalUpdate = 0.0f;//In seconds
 
     public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
@@ -44,16 +57,31 @@ public partial class Chunk : MonoBehaviour
         transform1.position = pos;
 
         bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 50, halfScale));
-
-
+        
         //Ensure that meshes is right
         var tmpMeshes = new MeshData[4];
+        
         foreach (var t in meshes)
         {
             tmpMeshes[(int) t.Type] = t;
         }
-
         meshes = tmpMeshes;
+        
+        //Set InternalData
+        _internalData = new InternalData
+        {
+            numChunks = (_mainSize / mapSize),
+            maxSize = mapSize + 1,
+            offsetX = coords.x * mapSize,
+            offsetY = coords.y * mapSize
+        };
+        _internalData.xSize = mapSize + ((coords.x < _internalData.numChunks) ? 1 : 0);
+        _internalData.ySize = mapSize + ((coords.y < _internalData.numChunks) ? 1 : 0);
+
+        _lodStepIncrements = new int[3];
+        _lodStepIncrements[(int) LODTriangles.LOD.LOD0] = 1;
+        _lodStepIncrements[(int) LODTriangles.LOD.LOD1] = 2;
+        _lodStepIncrements[(int) LODTriangles.LOD.LOD2] = 4;
     }
 
     public void Start()
@@ -131,6 +159,8 @@ public partial class Chunk : MonoBehaviour
 
     private void UpdateMeshes()
     {
+        _counter += Time.deltaTime;
+
         if (!gameObject.activeSelf) return;
 
         var stoneMeshData = meshes[(int) Cell.Type.Stone];
@@ -138,31 +168,19 @@ public partial class Chunk : MonoBehaviour
         var lavaMeshData = meshes[(int) Cell.Type.Lava];
 
         stoneMeshData.lod.SwitchTriangles(meshes[(int) Cell.Type.Stone].meshFilter.mesh, LOD);
-
-        var numChunks = (_mainSize / mapSize);
-        var xSize = mapSize + ((coords.x < numChunks) ? 1 : 0);
-        var ySize = mapSize + ((coords.y < numChunks) ? 1 : 0);
-        var maxSize = mapSize + 1;
-
-        var offsetX = coords.x * mapSize;
-        var offsetY = coords.y * mapSize;
-
-        var step = LOD switch
-        {
-            LODTriangles.LOD.LOD0 => 1,
-            LODTriangles.LOD.LOD1 => 2,
-            LODTriangles.LOD.LOD2 => 4,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        waterMeshData.lod.SwitchTriangles(meshes[(int) Cell.Type.Water].meshFilter.mesh, LOD);
 
         var waterVisibility = false;
         var lavaVisibility = false;
-        for (var x = 0; x < xSize; x += step)
+        var step = _lodStepIncrements[(int) LOD];
+
+        for (var x = 0; x < _internalData.xSize; x += step)
         {
-            for (var y = 0; y < ySize; y += step)
+            for (var y = 0; y < _internalData.ySize; y += step)
             {
-                var meshMapIndex = y * maxSize + x;
-                var cellIndex =  (offsetY + y + 1) * _mainSize+ (offsetX + x + 1);
+                var meshMapIndex = y * _internalData.maxSize + x;
+                var cellIndex = (_internalData.offsetY + y + 1) * _mainSize + (_internalData.offsetX + x + 1);
+
                 if (!_map.ValidCoord(cellIndex)) continue;
                 var currentCell = _map.CellAt(cellIndex);
 
@@ -185,7 +203,12 @@ public partial class Chunk : MonoBehaviour
             }
         }
 
-        stoneMeshData.RecalculateAndRefresh(_map, StoneFunc);
+        stoneMeshData.RefreshMesh();
+        if (_counter > StoneNormalUpdate)
+        {
+            stoneMeshData.RecalculateNormals(_map, StoneFunc);
+            _counter = 0;
+        }
 
         if (waterVisibility)
         {
@@ -224,7 +247,7 @@ public partial class Chunk : MonoBehaviour
         {
             var pos = (coords.y * mapSize + (y < 0 ? 0 : y)) * _mainSize + (coords.x * mapSize + (x < 0 ? 0 : x));
             pos = _map.ValidCoord(pos) ? pos : 0;
-            
+
             var (height, _) = heightFunc(_map.CellAt(pos));
             return (height, pos);
         }

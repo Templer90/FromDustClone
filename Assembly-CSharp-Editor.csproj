@@ -44,6 +44,7 @@
      <Compile Include="Assets\RTS_Camera\Scripts\Editor\RTS_CameraEditor.cs" />
      <Compile Include="Assets\RTS_Camera\Scripts\Editor\LayoutHelpers.cs" />
      <Compile Include="Assets\Editor\NormalsVisualizer.cs" />
+     <Compile Include="Assets\Editor\SynchronizedThreadEditor.cs" />
      <Compile Include="Assets\Editor\MeshEditor.cs" />
      <Reference Include="UnityEngine">
      <HintPath>/home/eric/Unity/Hub/Editor/2021.1.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>

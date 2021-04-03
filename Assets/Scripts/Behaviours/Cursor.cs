@@ -19,8 +19,8 @@ public class Cursor : MonoBehaviour
         _cam = Camera.main;
         _runtimeMap = FindObjectOfType<RuntimeMapHolder>();
     }
-
-    public void OnGUI()
+    
+    public void Update()
     {
         if (!Physics.Raycast(_cam.ScreenPointToRay(Input.mousePosition), out var hit))
             return;
@@ -32,14 +32,10 @@ public class Cursor : MonoBehaviour
         worldPosition = hit.point;
         test = _runtimeMap.WorldCoordinatesToCell(hit.point);
 
-      
+        if (Input.GetMouseButtonDown(2)) HandleChange();
+        
         if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1)) return;
         HandleGeneration();
-    }
-
-    public void Update()
-    {
-        if (Input.GetMouseButtonDown(2)) HandleChange();
     }
 
     private void HandleChange()
@@ -53,7 +49,6 @@ public class Cursor : MonoBehaviour
         {
             type = (Cell.Type) ((int) type + 1);
         }
-        Debug.Log(type);
     }
 
     private void HandleGeneration()
