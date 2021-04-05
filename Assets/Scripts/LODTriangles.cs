@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
-
 
 [Serializable]
 public class LODTriangles
 {
     public enum LOD
     {
-        LOD0,
-        LOD1,
-        LOD2
-    };
+        LOD0 = 1, //Every Vertex
+        LOD1 = 2, //Every second Vertex (quarter of the Vertices in total)
+        LOD2 = 4 //Every fourth Vertex (sixteens of the Vertices in total)
+    }
 
     [SerializeField] public int[] lod0Triangles;
     [SerializeField] public int[] lod1Triangles;
@@ -70,23 +70,63 @@ public class LODTriangles
         _oldLOD = lodLevel;
     }
 
-    public Vector3[] RecalculateNormals(Vector3[] vertices, Func<int, float> heightMapFunc)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC, IReadOnlyList<Vector3> vertices,
+        Func<int, float> heightMapFunc)
     {
-        Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC)
+        var pointA = (indexA < 0) ? borderVertices[-indexA - 1] : vertices[indexA];
+        var pointB = (indexB < 0) ? borderVertices[-indexB - 1] : vertices[indexB];
+        var pointC = (indexC < 0) ? borderVertices[-indexC - 1] : vertices[indexC];
+
+        pointA.y = (indexA < 0) ? heightMapFunc(borderVerticesIndices[-indexA - 1]) : pointA.y;
+        pointB.y = (indexB < 0) ? heightMapFunc(borderVerticesIndices[-indexB - 1]) : pointB.y;
+        pointC.y = (indexC < 0) ? heightMapFunc(borderVerticesIndices[-indexC - 1]) : pointC.y;
+
+        var sideAb = pointB - pointA;
+        var sideAc = pointC - pointA;
+        return Vector3.Cross(sideAb, sideAc).normalized;
+    }
+
+    public Vector3[] RecalculateNormals(Vector3[] vertices, Mesh mesh, Func<int, float> heightMapFunc)
+    {
+        mesh.RecalculateNormals();
+        var vertexNormals = mesh.normals;
+
+        var borderTriangleCount = borderTriangles.Length / 3;
+        for (var i = 0; i < borderTriangleCount; i++)
         {
-            var pointA = (indexA < 0) ? borderVertices[-indexA - 1] : vertices[indexA];
-            var pointB = (indexB < 0) ? borderVertices[-indexB - 1] : vertices[indexB];
-            var pointC = (indexC < 0) ? borderVertices[-indexC - 1] : vertices[indexC];
+            var normalTriangleIndex = i * 3;
+            var vertexIndexA = borderTriangles[normalTriangleIndex];
+            var vertexIndexB = borderTriangles[normalTriangleIndex + 1];
+            var vertexIndexC = borderTriangles[normalTriangleIndex + 2];
 
-            pointA.y = (indexA < 0) ? heightMapFunc(borderVerticesIndices[-indexA - 1]) : pointA.y;
-            pointB.y = (indexB < 0) ? heightMapFunc(borderVerticesIndices[-indexB - 1]) : pointB.y;
-            pointC.y = (indexC < 0) ? heightMapFunc(borderVerticesIndices[-indexC - 1]) : pointC.y;
+            var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC, vertices, heightMapFunc);
+            if (vertexIndexA >= 0)
+            {
+                vertexNormals[vertexIndexA] += triangleNormal;
+            }
 
-            var sideAb = pointB - pointA;
-            var sideAc = pointC - pointA;
-            return Vector3.Cross(sideAb, sideAc).normalized;
+            if (vertexIndexB >= 0)
+            {
+                vertexNormals[vertexIndexB] += triangleNormal;
+            }
+
+            if (vertexIndexC >= 0)
+            {
+                vertexNormals[vertexIndexC] += triangleNormal;
+            }
         }
 
+        for (var i = 0; i < vertexNormals.Length; i++)
+        {
+            vertexNormals[i].Normalize();
+        }
+
+        return vertexNormals;
+    }
+
+    public Vector3[] RecalculateNormals(Vector3[] vertices, Func<int, float> heightMapFunc)
+    {
         var vertexNormals = new Vector3[vertices.Length];
         var triangleCount = lod0Triangles.Length / 3;
         for (var i = 0; i < triangleCount; i++)
@@ -96,7 +136,7 @@ public class LODTriangles
             var vertexIndexB = lod0Triangles[normalTriangleIndex + 1];
             var vertexIndexC = lod0Triangles[normalTriangleIndex + 2];
 
-            var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+            var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC, vertices, heightMapFunc);
             vertexNormals[vertexIndexA] += triangleNormal;
             vertexNormals[vertexIndexB] += triangleNormal;
             vertexNormals[vertexIndexC] += triangleNormal;
@@ -110,7 +150,7 @@ public class LODTriangles
             var vertexIndexB = borderTriangles[normalTriangleIndex + 1];
             var vertexIndexC = borderTriangles[normalTriangleIndex + 2];
 
-            var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+            var triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC, vertices, heightMapFunc);
             if (vertexIndexA >= 0)
             {
                 vertexNormals[vertexIndexA] += triangleNormal;

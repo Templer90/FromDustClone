@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
+using UnityEditor;
 
+[InitializeOnLoad]
 public class SynchronizedThread : MonoBehaviour
 {
     public float meanUpdateTime;
@@ -15,6 +16,19 @@ public class SynchronizedThread : MonoBehaviour
     private int _oldLapses = 0;
     private SynchroThread _thread;
     private IRuntimeMap _runtimeMap;
+    
+    static SynchronizedThread()
+    {
+        EditorApplication.playModeStateChanged += ModeChanged;
+    }
+
+    private static void ModeChanged(PlayModeStateChange playModeState)
+    {
+        if (playModeState == PlayModeStateChange.EnteredEditMode)
+        {
+            FindObjectOfType<SynchronizedThread>().KillThread();
+        }
+    }
 
     public void Start()
     {
@@ -45,6 +59,7 @@ public class SynchronizedThread : MonoBehaviour
     {
         if (_thread == null) return;
         if (_thread.IsAlive) _thread.Abort();
+        _thread.Abort();
     }
 
     public void OnDisable()

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class RuntimeMapHolder : MonoBehaviour
 {
@@ -11,16 +11,22 @@ public class RuntimeMapHolder : MonoBehaviour
     public PhysicData data;
     [Range(-0.1f, 10)] public float timer = 1.0f;
     [Min(1)] public int chunkOffset = 1;
+
     // ReSharper disable once InconsistentNaming
+    [Min(1)] public float LOD1Size = 200;
     [Min(1)] public float LOD2Size = 300;
 
-    private float _counter = 0;
+    private float _counter;
     private Camera _cam;
-    private int _mapSize = 255;
-    private int _chunksize = 10;
-    private float _scale = 20;
+    private int _mapSize;
+    private int _chunksize;
+    private float _scale;
     private Chunk[] _chunks;
-    private readonly Plane[] _planes = new Plane[6];
+    
+    private readonly Plane[] _LOD0Planes = new Plane[6];
+    private readonly Plane[] _LOD1Planes = new Plane[6];
+    private readonly Plane[] _LOD2Planes = new Plane[6];
+
 
     public enum MapTypes
     {
@@ -51,7 +57,7 @@ public class RuntimeMapHolder : MonoBehaviour
         data = newMapUpdate.Physic;
         return newMapUpdate;
     }
-    
+
     public void Add(int x, int y, Cell.Type type, float amount)
     {
         if (!runtimeMap.ValidCoord(x, y)) return;
@@ -64,12 +70,17 @@ public class RuntimeMapHolder : MonoBehaviour
         if (_counter > 0 && _counter < timer) return;
         _counter -= timer;
 
-        GeometryUtility.CalculateFrustumPlanes(_cam, _planes);
+        
+        GeometryUtility.CalculateFrustumPlanes(_cam, _LOD0Planes);
+        UpdateLODPlanes(_LOD1Planes, LOD1Size, LOD2Size);
+        UpdateLODPlanes(_LOD2Planes, LOD2Size, _cam.farClipPlane);
+
         var startOffset = Time.frameCount % chunkOffset;
         for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
         {
-            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].bounds))
+            if (GeometryUtility.TestPlanesAABB(_LOD0Planes, _chunks[i].bounds))
             {
+                EnsureLOD(_chunks[i]);
                 _chunks[i].Show();
             }
             else
@@ -77,27 +88,38 @@ public class RuntimeMapHolder : MonoBehaviour
                 _chunks[i].Hide();
             }
         }
+    }
 
+    private void EnsureLOD(Chunk chunk)
+    {
+        chunk.LOD = LODTriangles.LOD.LOD0;
+        if (GeometryUtility.TestPlanesAABB(_LOD1Planes, chunk.bounds))
+        {
+            chunk.LOD = LODTriangles.LOD.LOD1;
+          
+        }
+        if (GeometryUtility.TestPlanesAABB(_LOD2Planes, chunk.bounds))
+        {
+            chunk.LOD = LODTriangles.LOD.LOD2;
+           
+        }
+        if (GeometryUtility.TestPlanesAABB(_LOD0Planes, chunk.bounds))
+        {
+           // chunk.LOD = LODTriangles.LOD.LOD0;
+            return;
+        }
+        Debug.Log("Chunk outside and inside of frustum?");
+    }
+
+    private void UpdateLODPlanes(Plane[] planes, float near, float farClipPlane)
+    {
         // create projection matrix: 60 FOV, square aspect, near plane 1, far plane 1000
         var matrix = _cam.projectionMatrix;
-        var near = LOD2Size;
-        var farClipPlane = _cam.farClipPlane;
         var c = -(farClipPlane + near) / (farClipPlane - near);
         var d = -(2.0F * farClipPlane * near) / (farClipPlane - near);
         matrix[2, 2] = c;
         matrix[2, 3] = d;
-        GeometryUtility.CalculateFrustumPlanes(matrix * _cam.worldToCameraMatrix, _planes);
-        for (var i = startOffset; i < _chunks.Length; i += chunkOffset)
-        {
-            if (GeometryUtility.TestPlanesAABB(_planes, _chunks[i].bounds))
-            {
-                _chunks[i].LOD = LODTriangles.LOD.LOD2;
-            }
-            else
-            {
-                _chunks[i].LOD = LODTriangles.LOD.LOD0;
-            }
-        }
+        GeometryUtility.CalculateFrustumPlanes(matrix * _cam.worldToCameraMatrix, planes);
     }
 
     public Vector2Int WorldCoordinatesToCell(Vector3 world)

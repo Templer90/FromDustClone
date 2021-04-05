@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public partial class Chunk : MonoBehaviour
 {
@@ -12,7 +13,6 @@ public partial class Chunk : MonoBehaviour
 
     // ReSharper disable once InconsistentNaming
     public LODTriangles.LOD LOD = LODTriangles.LOD.LOD0;
-    private static int[] _lodStepIncrements;
 
     public MeshData[] meshes =
     {
@@ -35,9 +35,9 @@ public partial class Chunk : MonoBehaviour
     // Internal
     private IRuntimeMap _map;
     private int _mainSize; //Side length of the whole Map
-    private InternalData _internalData;
+    private InternalData _staticInternalData;
     private float _counter;
-    private const float StoneNormalUpdate = 0.0f;//In seconds
+    private const float StoneNormalUpdate = 0.0f; //In seconds
 
     public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
@@ -56,32 +56,28 @@ public partial class Chunk : MonoBehaviour
         transform1.name = "Chunk(" + x + "," + y + ")";
         transform1.position = pos;
 
-        bounds = new Bounds(pos + new Vector3(halfScale, 0, halfScale), new Vector3(halfScale, 50, halfScale));
-        
+        bounds = new Bounds(pos + new Vector3(halfScale, elevationScale/2, halfScale), new Vector3(elevationScale, elevationScale*1.5f, elevationScale));
+
         //Ensure that meshes is right
         var tmpMeshes = new MeshData[4];
-        
+
         foreach (var t in meshes)
         {
             tmpMeshes[(int) t.Type] = t;
         }
+
         meshes = tmpMeshes;
-        
+
         //Set InternalData
-        _internalData = new InternalData
+        _staticInternalData = new InternalData
         {
             numChunks = (_mainSize / mapSize),
             maxSize = mapSize + 1,
             offsetX = coords.x * mapSize,
             offsetY = coords.y * mapSize
         };
-        _internalData.xSize = mapSize + ((coords.x < _internalData.numChunks) ? 1 : 0);
-        _internalData.ySize = mapSize + ((coords.y < _internalData.numChunks) ? 1 : 0);
-
-        _lodStepIncrements = new int[3];
-        _lodStepIncrements[(int) LODTriangles.LOD.LOD0] = 1;
-        _lodStepIncrements[(int) LODTriangles.LOD.LOD1] = 2;
-        _lodStepIncrements[(int) LODTriangles.LOD.LOD2] = 4;
+        _staticInternalData.xSize = mapSize + ((coords.x < _staticInternalData.numChunks) ? 1 : 0);
+        _staticInternalData.ySize = mapSize + ((coords.y < _staticInternalData.numChunks) ? 1 : 0);
     }
 
     public void Start()
@@ -172,14 +168,16 @@ public partial class Chunk : MonoBehaviour
 
         var waterVisibility = false;
         var lavaVisibility = false;
-        var step = _lodStepIncrements[(int) LOD];
+        var step = (int) LOD;
+        Assert.AreNotEqual(0, step);
 
-        for (var x = 0; x < _internalData.xSize; x += step)
+        for (var x = 0; x < _staticInternalData.xSize; x += step)
         {
-            for (var y = 0; y < _internalData.ySize; y += step)
+            for (var y = 0; y < _staticInternalData.ySize; y += step)
             {
-                var meshMapIndex = y * _internalData.maxSize + x;
-                var cellIndex = (_internalData.offsetY + y + 1) * _mainSize + (_internalData.offsetX + x + 1);
+                var meshMapIndex = y * _staticInternalData.maxSize + x;
+                var cellIndex = (_staticInternalData.offsetY + y + 1) * _mainSize +
+                                (_staticInternalData.offsetX + x + 1);
 
                 if (!_map.ValidCoord(cellIndex)) continue;
                 var currentCell = _map.CellAt(cellIndex);
@@ -188,13 +186,11 @@ public partial class Chunk : MonoBehaviour
                 var (stoneHeight, _) = StoneFunc(currentCell);
                 stoneMeshData.vertices[meshMapIndex].y = stoneHeight;
 
-
                 waterMeshData.color[meshMapIndex].r = currentCell.Water;
                 var (waterHeight, visibleWater) = WaterFunc(currentCell);
                 waterMeshData.vertices[meshMapIndex].y = waterHeight;
                 waterMeshData.uv3[meshMapIndex] = currentCell.WaterFlow;
                 waterVisibility |= visibleWater;
-
 
                 lavaMeshData.color[meshMapIndex].r = currentCell.Stone;
                 var (lavaHeight, visibleLava) = LavaFunc(currentCell);
