@@ -72,33 +72,33 @@ public class HeightMapGenerator : MonoBehaviour
     }
     */
 
-    
+
     float[] GenerateHeightMapCPU(int mapSize)
     {
         var map = new float[mapSize * mapSize];
         seed = (randomizeSeed) ? Random.Range(-10000, 10000) : seed;
         var prng = new System.Random(seed);
 
-        Vector2[] offsets = new Vector2[numOctaves];
-        for (int i = 0; i < numOctaves; i++)
+        var offsets = new Vector2[numOctaves];
+        for (var i = 0; i < numOctaves; i++)
         {
             offsets[i] = new Vector2(prng.Next(-1000, 1000), prng.Next(-1000, 1000));
         }
 
-        float minValue = float.MaxValue;
-        float maxValue = float.MinValue;
+        var minValue = float.MaxValue;
+        var maxValue = float.MinValue;
 
-        for (int y = 0; y < mapSize; y++)
+        for (var x = 0; x < mapSize; x++)
         {
-            for (int x = 0; x < mapSize; x++)
+            for (var y = 0; y < mapSize; y++)
             {
                 float noiseValue = 0;
-                float scale = initialScale;
+                var scale = initialScale;
                 float weight = 1;
-                for (int i = 0; i < numOctaves; i++)
+                for (var i = 0; i < numOctaves; i++)
                 {
-                    Vector2 p = offsets[i] + new Vector2(x / (float) mapSize, y / (float) mapSize) * scale;
-                    noiseValue += Mathf.PerlinNoise(p.x, p.y) * weight;
+                    var p = offsets[i] + new Vector2(x / ((float) mapSize), y / ((float) mapSize)) * scale;
+                    noiseValue += Mathf.Clamp01(Mathf.PerlinNoise(p.x, p.y) * weight);
                     weight *= persistence;
                     scale *= lacunarity;
                 }
@@ -110,14 +110,12 @@ public class HeightMapGenerator : MonoBehaviour
         }
 
         // Normalize
-        if (maxValue != minValue)
+        if (Mathf.Abs(maxValue - minValue) <= 0.0001f) return map;
+        for (var x = 0; x < mapSize; x++)
         {
-            for (int y = 0; y < mapSize; y++)
+            for (var y = 0; y < mapSize; y++)
             {
-                for (int x = 0; x < mapSize; x++)
-                {
-                    map[y * mapSize + x] = (map[y * mapSize + x] - minValue) / (maxValue - minValue);
-                }
+                map[y * mapSize + x] = (map[y * mapSize + x] - minValue) / (maxValue - minValue);
             }
         }
 

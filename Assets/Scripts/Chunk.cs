@@ -33,13 +33,19 @@ public partial class Chunk : MonoBehaviour
     }
 
     // Internal
-    private IRuntimeMap _map;
+    private AbstractMap _map;
     private int _mainSize; //Side length of the whole Map
     private InternalData _staticInternalData;
     private float _counter;
     private const float StoneNormalUpdate = 0.0f; //In seconds
 
-    public void Initialize(int x, int y, IRuntimeMap mainMap, int mainMapSize, int chunkSize, float scaling,
+    public void PlayInitialize(int x, int y, AbstractMap mainMap, int mainMapSize, int chunkSize, float scaling,
+        float elevationScaling)
+    {
+        Initialize(x, y, mainMap, mainMapSize, chunkSize, scaling, elevationScaling);
+    }
+
+    public void Initialize(int x, int y, AbstractMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
     {
         scale = scaling;
@@ -56,7 +62,9 @@ public partial class Chunk : MonoBehaviour
         transform1.name = "Chunk(" + x + "," + y + ")";
         transform1.position = pos;
 
-        bounds = new Bounds(pos + new Vector3(halfScale, elevationScale/2, halfScale), new Vector3(elevationScale, elevationScale*1.5f, elevationScale));
+        var boundsCenter = pos + new Vector3(halfScale, elevationScale / 2, halfScale);
+        var boundsScale = new Vector3(elevationScale, elevationScale * 2, elevationScale);
+        bounds = new Bounds(boundsCenter, boundsScale);
 
         //Ensure that meshes is right
         var tmpMeshes = new MeshData[4];
@@ -181,7 +189,8 @@ public partial class Chunk : MonoBehaviour
 
                 if (!_map.ValidCoord(cellIndex)) continue;
                 var currentCell = _map.CellAt(cellIndex);
-
+                
+                // TODO: I could do the normals here
                 stoneMeshData.color[meshMapIndex].r = currentCell.Sand;
                 var (stoneHeight, _) = StoneFunc(currentCell);
                 stoneMeshData.vertices[meshMapIndex].y = stoneHeight;

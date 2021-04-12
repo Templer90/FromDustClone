@@ -15,7 +15,7 @@ public class SynchronizedThread : MonoBehaviour
 
     private int _oldLapses = 0;
     private SynchroThread _thread;
-    private IRuntimeMap _runtimeMap;
+    private AbstractMap _runtimeMap;
     
     static SynchronizedThread()
     {

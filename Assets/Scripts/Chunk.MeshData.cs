@@ -24,7 +24,7 @@ public partial class Chunk
             uv3 = mesh.uv3;
         }
 
-        public void RecalculateAndRefresh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
+        public void RecalculateAndRefresh(AbstractMap map, Func<Cell, (float, bool)> heightAtCell)
         {
             RecalculateNormals(map, heightAtCell);
             RefreshMesh();
@@ -39,18 +39,18 @@ public partial class Chunk
             mesh.MarkModified();
         }
 
-        public void RecalculateNormals(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
+        public void RecalculateNormals(AbstractMap map, Func<Cell, (float, bool)> heightAtCell)
         {
 #if FastNormals
             meshFilter.mesh.normals =
- lod.RecalculateNormals(vertices, meshFilter.mesh, (index) => heightAtCell(map.CellAt(index)).Item1);
+                lod.RecalculateNormals(vertices, meshFilter.mesh, (index) => heightAtCell(map.CellAt(index)).Item1);
 #else
             meshFilter.mesh.normals =
                 lod.RecalculateNormals(vertices, (index) => heightAtCell(map.CellAt(index)).Item1);
 #endif
         }
 
-        public void RecalculateNormalsSharedMesh(IRuntimeMap map, Func<Cell, (float, bool)> heightAtCell)
+        public void RecalculateNormalsSharedMesh(AbstractMap map, Func<Cell, (float, bool)> heightAtCell)
         {
             meshFilter.sharedMesh.normals = lod.RecalculateNormals(meshFilter.sharedMesh.vertices,
                 (index) => heightAtCell(map.CellAt(index)).Item1);

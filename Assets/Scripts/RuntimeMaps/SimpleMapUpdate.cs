@@ -1,124 +1,71 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using UnityEngine.Assertions;
-using Random = System.Random;
 
-
-public class SimpleMapUpdate : IRuntimeMap
+public class SimpleMapUpdate : AbstractMap
 {
-    private Cell[] _map;
     private Cell[] _previousMap;
-
-    private readonly int _mapSize;
-    private readonly int _mapSizeSquared;
-
-    public PhysicData Physic { get; }
+    private Cell[] _map;
 
     public SimpleMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
-        IReadOnlyList<float> waterMap)
+        IReadOnlyList<float> waterMap):base(heightMapSize,physicData,stoneHeightMap,waterMap)
     {
-        Assert.AreEqual(stoneHeightMap.Count, (heightMapSize + 1) * (heightMapSize + 1));
-        Assert.AreEqual(stoneHeightMap.Count, waterMap.Count);
+        Assert.AreEqual(stoneHeightMap.Count, heightMapSize  * heightMapSize, "Ensure that the the Stone Heightmap size is the square of the heightMapSize");
+        Assert.AreEqual(stoneHeightMap.Count, waterMap.Count ,"Ensure that the Water and the Stone Heightmaps are in equal Size");
         
-        Physic = physicData;
-        _mapSize = heightMapSize;
-        _mapSizeSquared = stoneHeightMap.Count;
-
         _map = new Cell[stoneHeightMap.Count];
         _previousMap = new Cell[stoneHeightMap.Count];
         for (var i = 0; i < stoneHeightMap.Count; i++)
         {
-            _map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
+            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
             _previousMap[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
         }
     }
 
     private void Swap()
     {
-        var tmp = _map;
+        var tmp = Map;
         _map = _previousMap;
         _previousMap = tmp;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ValidCoord(int x, int y)
+    public new bool ValidCoord(int x, int y)
     {
-        var pos = y * _mapSize + x;
+        var pos = y * MapSize + x;
         return ValidCoord(pos);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ValidCoord(int index)
+    public new bool ValidCoord(int index)
     {
         return index >= 0 && index < _map.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Cell CellAt(int x, int y)
+    public new Cell CellAt(int x, int y)
     {
-        return _map[y * _mapSize + x];
+        return _map[y * MapSize + x];
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Cell CellAt(int index)
+    public new Cell CellAt(int index)
     {
         return _map[index];
     }
 
-    public float WholeAt(int x, int y)
-    {
-        return CellAt(x, y).WholeHeight;
-    }
 
-    public float ValueAt(int x, int y, Cell.Type type)
-    {
-        var cell = CellAt(x, y);
-        return type switch
-        {
-            Cell.Type.Stone => cell.Stone,
-            Cell.Type.Sand => cell.Sand,
-            Cell.Type.Water => cell.Water,
-            Cell.Type.Lava => cell.Lava,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-        };
-    }
-
-    public void Add(int x, int y, Cell.Type type, float amount)
-    {
-        var cell = CellAt(x, y);
-        switch (type)
-        {
-            case Cell.Type.Stone:
-                cell.Stone += amount;
-                break;
-            case Cell.Type.Sand:
-                cell.Sand += amount;
-                break;
-            case Cell.Type.Water:
-                cell.Water += amount;
-                break;
-            case Cell.Type.Lava:
-                cell.Lava += amount;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type), type, null);
-        }
-    }
-
-    public void MapUpdate()
+    public override void MapUpdate()
     {
         var kernel = Physic.GETKernel();
-        var a = Physic.Sand_dt * Physic.SandViscosity * _mapSizeSquared;
+        var a = Physic.Sand_dt * Physic.SandViscosity * MapSizeSquared;
 
         void HandleWater(Cell centerCell, Cell prevCenterCell, int x, int y)
         {
             for (var i = 0; i < kernel.Length; i++)
             {
-                var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                var otherCell = _map[otherIndex];
+                var otherIndex = (y + kernel[i].Item1) * MapSize + (x + kernel[i].Item2);
+                var otherCell = Map[otherIndex];
 
                 if (centerCell.Water < Physic.EvaporationThreshold)
                 {
@@ -145,8 +92,8 @@ public class SimpleMapUpdate : IRuntimeMap
             var indices = new int[kernel.Length];
             for (var i = 0; i < kernel.Length; i++)
             {
-                var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                var otherCell = _map[otherIndex];
+                var otherIndex = (y + kernel[i].Item1) * MapSize + (x + kernel[i].Item2);
+                var otherCell = Map[otherIndex];
 
                 sandAcc += otherCell.Sand;
                 indices[foundAcc] = otherIndex;
@@ -162,8 +109,8 @@ public class SimpleMapUpdate : IRuntimeMap
             if (centerCell.Sand < Physic.SandStiffness) return;
             for (var i = 0; i < kernel.Length; i++)
             {
-                var otherIndex = (y + kernel[i].Item1) * _mapSize + (x + kernel[i].Item2);
-                var otherCell = _map[otherIndex];
+                var otherIndex = (y + kernel[i].Item1) * MapSize + (x + kernel[i].Item2);
+                var otherCell = Map[otherIndex];
                 var sandDiff = (centerCell.Stone + centerCell.Sand) - (otherCell.Stone + otherCell.Sand);
                 var delta = sandDiff * Physic.SandHardness;
 
@@ -172,13 +119,13 @@ public class SimpleMapUpdate : IRuntimeMap
             }
         }
 
-        for (var x = 1; x < _mapSize - 1; x++)
+        for (var x = 1; x < MapSize - 1; x++)
         {
-            for (var y = 1; y < _mapSize - 1; y++)
+            for (var y = 1; y < MapSize - 1; y++)
             {
-                var middleIndex = y * _mapSize + x;
-                var centerCell = _map[middleIndex];
-                var prevCenterCell = _previousMap[y * _mapSize + x];
+                var middleIndex = y * MapSize + x;
+                var centerCell = Map[middleIndex];
+                var prevCenterCell = _previousMap[y * MapSize + x];
 
                 HandleSand(centerCell, prevCenterCell, x, y);
                 HandleWater(centerCell, prevCenterCell, x, y);

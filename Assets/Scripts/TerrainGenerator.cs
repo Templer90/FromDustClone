@@ -26,7 +26,7 @@ public class TerrainGenerator : MonoBehaviour
 
     public void GenerateHeightMap()
     {
-        stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize + 1);
+        stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize );
         waterHeightMap = new float [stoneHeightMap.Length];
         for (var i = 0; i < waterHeightMap.Length; i++)
         {
@@ -45,7 +45,7 @@ public class TerrainGenerator : MonoBehaviour
         for (var i = 0; i < transform.childCount; i++)
         {
             var chunk = transform.GetChild(i).gameObject.GetComponent<Chunk>();
-            chunk.Initialize(chunk.coords.x, chunk.coords.y, runtimeMap, mapSize, chunksize, scale,
+            chunk.PlayInitialize(chunk.coords.x, chunk.coords.y, runtimeMap, mapSize, chunksize, scale,
                 elevationScale);
             chunks[i] = chunk;
         }

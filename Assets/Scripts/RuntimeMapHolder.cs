@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 
 public class RuntimeMapHolder : MonoBehaviour
 {
-    public IRuntimeMap runtimeMap;
+    public AbstractMap runtimeMap;
 
     public MapTypes mapType = MapTypes.CellBased;
     public PhysicData data;
@@ -35,10 +35,10 @@ public class RuntimeMapHolder : MonoBehaviour
         NavierStokes
     }
 
-    public IRuntimeMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
+    public AbstractMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
         IReadOnlyList<float> initialWaterMap)
     {
-        IRuntimeMap newMapUpdate;
+        AbstractMap newMapUpdate;
         switch (mapType)
         {
             case MapTypes.Simple:
@@ -138,7 +138,7 @@ public class RuntimeMapHolder : MonoBehaviour
         return ret;
     }
 
-    public void Initialize(Camera main, int mapsize, int chunkSize, float scaling, Chunk[] chunks, IRuntimeMap map)
+    public void Initialize(Camera main, int mapsize, int chunkSize, float scaling, Chunk[] chunks, AbstractMap map)
     {
         _cam = main;
         _chunksize = chunkSize;
