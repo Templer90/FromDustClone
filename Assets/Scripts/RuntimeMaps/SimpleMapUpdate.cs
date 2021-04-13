@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using RuntimeMaps;
 using UnityEngine.Assertions;
 
 public class SimpleMapUpdate : AbstractMap

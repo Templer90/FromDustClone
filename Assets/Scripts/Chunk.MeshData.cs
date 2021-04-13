@@ -1,5 +1,6 @@
 #define FastNormals
 using System;
+using RuntimeMaps;
 using UnityEngine;
 
 public partial class Chunk
