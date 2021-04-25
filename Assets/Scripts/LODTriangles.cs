@@ -84,7 +84,10 @@ public class LODTriangles
 
         var sideAb = pointB - pointA;
         var sideAc = pointC - pointA;
-        return Vector3.Cross(sideAb, sideAc).normalized;
+        var perp = Vector3.Cross(sideAb, sideAc);
+        var perpLength = perp.magnitude;
+        perp /= perpLength;
+        return perp;
     }
 
     public Vector3[] RecalculateNormals(Vector3[] vertices, Mesh mesh, Func<int, float> heightMapFunc)

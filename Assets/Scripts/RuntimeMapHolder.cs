@@ -23,7 +23,7 @@ public class RuntimeMapHolder : MonoBehaviour
     private int _chunksize;
     private float _scale;
     private Chunk[] _chunks;
-    
+
     private readonly Plane[] _LOD0Planes = new Plane[6];
     private readonly Plane[] _LOD1Planes = new Plane[6];
     private readonly Plane[] _LOD2Planes = new Plane[6];
@@ -37,19 +37,19 @@ public class RuntimeMapHolder : MonoBehaviour
     }
 
     public AbstractMap MakeNewRuntimeMap(int sideLength, IReadOnlyList<float> initialStoneHeightMap,
-        IReadOnlyList<float> initialWaterMap)
+        IReadOnlyList<float> initialSandMap, IReadOnlyList<float> initialWaterMap)
     {
         AbstractMap newMapUpdate;
         switch (mapType)
         {
             case MapTypes.Simple:
-                newMapUpdate = new SimpleMapUpdate(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                newMapUpdate = new SimpleMapUpdate(sideLength, data, initialStoneHeightMap, initialSandMap,initialWaterMap);
                 break;
             case MapTypes.CellBased:
-                newMapUpdate = new CellBasedMapUpdate(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                newMapUpdate = new CellBasedMapUpdate(sideLength, data, initialStoneHeightMap,initialSandMap, initialWaterMap);
                 break;
             case MapTypes.NavierStokes:
-                newMapUpdate = new NavierStokes(sideLength, data, initialStoneHeightMap, initialWaterMap);
+                newMapUpdate = new NavierStokes(sideLength, data, initialStoneHeightMap, initialSandMap,initialWaterMap);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -71,7 +71,7 @@ public class RuntimeMapHolder : MonoBehaviour
         if (_counter > 0 && _counter < timer) return;
         _counter -= timer;
 
-        
+
         GeometryUtility.CalculateFrustumPlanes(_cam, _LOD0Planes);
         UpdateLODPlanes(_LOD1Planes, LOD1Size, LOD2Size);
         UpdateLODPlanes(_LOD2Planes, LOD2Size, _cam.farClipPlane);
@@ -97,18 +97,19 @@ public class RuntimeMapHolder : MonoBehaviour
         if (GeometryUtility.TestPlanesAABB(_LOD1Planes, chunk.bounds))
         {
             chunk.LOD = LODTriangles.LOD.LOD1;
-          
         }
+
         if (GeometryUtility.TestPlanesAABB(_LOD2Planes, chunk.bounds))
         {
             chunk.LOD = LODTriangles.LOD.LOD2;
-           
         }
+
         if (GeometryUtility.TestPlanesAABB(_LOD0Planes, chunk.bounds))
         {
-           // chunk.LOD = LODTriangles.LOD.LOD0;
+            // chunk.LOD = LODTriangles.LOD.LOD0;
             return;
         }
+
         Debug.Log("Chunk outside and inside of frustum?");
     }
 
@@ -147,5 +148,7 @@ public class RuntimeMapHolder : MonoBehaviour
         _scale = scaling;
         _chunks = chunks;
         runtimeMap = map;
+
+        runtimeMap.Start();
     }
 }

@@ -16,21 +16,31 @@ public class TerrainGenerator : MonoBehaviour
     [Header("Erosion Settings")] [Range(0, 1)]
     public float waterTableHeight = 0.1f;
 
+    [Range(0, 1)] public float topSoilHeight = 0.2f;
+
     public ComputeShader erosion;
     public int numErosionIterations = 50000;
     public int erosionBrushRadius = 3;
 
     // Internal
     [SerializeField] private float[] stoneHeightMap;
+    [SerializeField] private float[] sandHeightMap;
     [SerializeField] private float[] waterHeightMap;
 
     public void GenerateHeightMap()
     {
-        stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize );
+        stoneHeightMap = FindObjectOfType<HeightMapGenerator>().GenerateHeightMap(mapSize);
+
+        sandHeightMap = new float [stoneHeightMap.Length];
+        for (var i = 0; i < sandHeightMap.Length; i++)
+        {
+            sandHeightMap[i] = topSoilHeight;
+        }
+
         waterHeightMap = new float [stoneHeightMap.Length];
         for (var i = 0; i < waterHeightMap.Length; i++)
         {
-            waterHeightMap[i] = (waterTableHeight > stoneHeightMap[i]) ? waterTableHeight : 0;
+            waterHeightMap[i] = (waterTableHeight > stoneHeightMap[i] + sandHeightMap[i]) ? waterTableHeight : 0;
         }
     }
 
@@ -40,7 +50,7 @@ public class TerrainGenerator : MonoBehaviour
         var chunks = new Chunk[numChunks * numChunks];
 
         var runtimeMap = FindObjectOfType<RuntimeMapHolder>()
-            .MakeNewRuntimeMap(mapSize, stoneHeightMap, waterHeightMap);
+            .MakeNewRuntimeMap(mapSize, stoneHeightMap, sandHeightMap, waterHeightMap);
 
         for (var i = 0; i < transform.childCount; i++)
         {
@@ -59,7 +69,7 @@ public class TerrainGenerator : MonoBehaviour
         var chunks = new Chunk[numChunks * numChunks];
 
         var runtimeMap = FindObjectOfType<RuntimeMapHolder>()
-            .MakeNewRuntimeMap(mapSize, stoneHeightMap, waterHeightMap);
+            .MakeNewRuntimeMap(mapSize, stoneHeightMap, sandHeightMap, waterHeightMap);
 
         for (var x = 0; x < numChunks; x++)
         {

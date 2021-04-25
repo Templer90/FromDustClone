@@ -6,6 +6,9 @@ using UnityEngine.Assertions;
 
 public partial class Chunk : MonoBehaviour
 {
+    public int id = -1;
+    private static int _idCounter;
+
     [Header("Mesh Settings")] public Vector2Int coords = new Vector2Int(0, 0);
     public int mapSize;
     public float scale;
@@ -37,7 +40,7 @@ public partial class Chunk : MonoBehaviour
     private AbstractMap _map;
     private int _mainSize; //Side length of the whole Map
     private InternalData _staticInternalData;
-    private float _counter;
+    private float _timeCounter;
     private const float StoneNormalUpdate = 0.0f; //In seconds
 
     public void PlayInitialize(int x, int y, AbstractMap mainMap, int mainMapSize, int chunkSize, float scaling,
@@ -49,6 +52,8 @@ public partial class Chunk : MonoBehaviour
     public void Initialize(int x, int y, AbstractMap mainMap, int mainMapSize, int chunkSize, float scaling,
         float elevationScaling)
     {
+        id = _idCounter++;
+
         scale = scaling;
         coords.x = x;
         coords.y = y;
@@ -164,7 +169,7 @@ public partial class Chunk : MonoBehaviour
 
     private void UpdateMeshes()
     {
-        _counter += Time.deltaTime;
+        _timeCounter += Time.deltaTime;
 
         if (!gameObject.activeSelf) return;
 
@@ -190,7 +195,7 @@ public partial class Chunk : MonoBehaviour
 
                 if (!_map.ValidCoord(cellIndex)) continue;
                 var currentCell = _map.CellAt(cellIndex);
-                
+
                 // TODO: I could do the normals here
                 stoneMeshData.color[meshMapIndex].r = currentCell.Sand;
                 var (stoneHeight, _) = StoneFunc(currentCell);
@@ -210,10 +215,10 @@ public partial class Chunk : MonoBehaviour
         }
 
         stoneMeshData.RefreshMesh();
-        if (_counter > StoneNormalUpdate)
+        if (_timeCounter > StoneNormalUpdate)
         {
             stoneMeshData.RecalculateNormals(_map, StoneFunc);
-            _counter = 0;
+            _timeCounter = 0;
         }
 
         if (waterVisibility)
@@ -249,16 +254,26 @@ public partial class Chunk : MonoBehaviour
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        (float, int) GETFunc(int x, int y)
+        (float, int, Cell) HeightFunc(int x, int y)
         {
             var pos = (coords.y * mapSize + (y < 0 ? 0 : y)) * _mainSize + (coords.x * mapSize + (x < 0 ? 0 : x));
             pos = _map.ValidCoord(pos) ? pos : 0;
 
-            var (height, _) = heightFunc(_map.CellAt(pos));
-            return (height, pos);
+            var cell = _map.CellAt(pos);
+            var (height, _) = heightFunc(cell);
+            return (height, pos, cell);
         }
 
-        var generatedRawMeshData = MeshGenerator.GenerateTerrainMesh(GETFunc, mapSize, scale);
+        (float, float) UVCoord(int x, int y)
+        {
+            var uvX = coords.x * mapSize + (x < 0 ? 0 : x);
+            var uvY = coords.y * mapSize + (y < 0 ? 0 : y);
+
+            var pos = uvY * _mainSize + (uvX);
+            return _map.ValidCoord(pos) ? (uvX / _mainSize, uvY / _mainSize) : (0, 0);
+        }
+
+        var generatedRawMeshData = MeshGenerator.GenerateTerrainMesh(HeightFunc, UVCoord, mapSize, scale);
 
         AssignMeshComponents(meshData);
         var mesh = generatedRawMeshData.CreateMesh();

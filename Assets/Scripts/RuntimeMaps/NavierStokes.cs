@@ -13,9 +13,10 @@ public class NavierStokes : AbstractMap
     private float[] s;
     private float[] density;
     
-    public NavierStokes(int heightMapSize, PhysicData physicData,
+    public NavierStokes(int heightMapSize, PhysicData physicData, 
         IReadOnlyList<float> stoneHeightMap,
-        IReadOnlyList<float> waterMap): base(heightMapSize,physicData,stoneHeightMap,waterMap)
+        IReadOnlyList<float> sandHeightMap,
+        IReadOnlyList<float> waterMap) : base(heightMapSize, physicData, stoneHeightMap, sandHeightMap, waterMap)
     {
         s = new float[MapSizeSquared];
         density = new float[MapSizeSquared];
@@ -30,7 +31,7 @@ public class NavierStokes : AbstractMap
 
         for (var i = 0; i < stoneHeightMap.Count; i++)
         {
-            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = 0f, Sand = 0f, Lava = 0f};
+            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = sandHeightMap[i], Lava = 0f};
         }
 
         for (var x = 1; x < MapSize - 1; x++)

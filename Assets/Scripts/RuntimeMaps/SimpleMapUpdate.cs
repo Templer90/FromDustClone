@@ -8,8 +8,10 @@ public class SimpleMapUpdate : AbstractMap
     private Cell[] _previousMap;
     private Cell[] _map;
 
-    public SimpleMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
-        IReadOnlyList<float> waterMap):base(heightMapSize,physicData,stoneHeightMap,waterMap)
+    public SimpleMapUpdate(int heightMapSize, PhysicData physicData, 
+        IReadOnlyList<float> stoneHeightMap,
+        IReadOnlyList<float> sandHeightMap,
+        IReadOnlyList<float> waterMap) : base(heightMapSize, physicData, stoneHeightMap, sandHeightMap, waterMap)
     {
         Assert.AreEqual(stoneHeightMap.Count, heightMapSize  * heightMapSize, "Ensure that the the Stone Heightmap size is the square of the heightMapSize");
         Assert.AreEqual(stoneHeightMap.Count, waterMap.Count ,"Ensure that the Water and the Stone Heightmaps are in equal Size");
@@ -18,8 +20,8 @@ public class SimpleMapUpdate : AbstractMap
         _previousMap = new Cell[stoneHeightMap.Count];
         for (var i = 0; i < stoneHeightMap.Count; i++)
         {
-            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
-            _previousMap[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
+            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = sandHeightMap[i], Lava = 0f};
+            _previousMap[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = sandHeightMap[i], Lava = 0f};
         }
     }
 

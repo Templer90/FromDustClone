@@ -1,15 +1,28 @@
 using System.Collections.Generic;
 using RuntimeMaps;
+using UnityEngine;
 
 public class CellBasedMapUpdate : AbstractMap
 {
-    public CellBasedMapUpdate(int heightMapSize, PhysicData physicData, IReadOnlyList<float> stoneHeightMap,
-        IReadOnlyList<float> waterMap) : base(heightMapSize, physicData, stoneHeightMap, waterMap)
+    private Color[] heightColor;
+    private GlobalMapTest _testMap;
+
+    public CellBasedMapUpdate(int heightMapSize, PhysicData physicData,
+        IReadOnlyList<float> stoneHeightMap,
+        IReadOnlyList<float> sandHeightMap,
+        IReadOnlyList<float> waterMap) : base(heightMapSize, physicData, stoneHeightMap, sandHeightMap, waterMap)
     {
         for (var i = 0; i < stoneHeightMap.Count; i++)
         {
-            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = 0f, Lava = 0f};
+            Map[i] = new Cell {Stone = stoneHeightMap[i], Water = waterMap[i], Sand = sandHeightMap[i], Lava = 0f};
         }
+    }
+
+    public override void Start()
+    {
+        _testMap = Object.FindObjectOfType<GlobalMapTest>();
+        _testMap.Init();
+        heightColor = new Color[Map.Length];
     }
 
     public override void MapUpdate()
@@ -42,8 +55,8 @@ public class CellBasedMapUpdate : AbstractMap
                 smallerCell = otherCell;
             }
 
-            centerCell.WaterFlow.x = 0;
-            centerCell.WaterFlow.y = 0;
+            //centerCell.WaterFlow.x = 0;
+            //centerCell.WaterFlow.y = 0;
 
             //found smaller one
             if (index == -1) return;
@@ -54,8 +67,11 @@ public class CellBasedMapUpdate : AbstractMap
             var w = centerCell.Water;
 
             var (xFlow, yFlow) = kernel[index];
-            centerCell.WaterFlow.x = yFlow * heightDiff;
-            centerCell.WaterFlow.y = xFlow * heightDiff;
+            centerCell.WaterFlow.x += yFlow * heightDiff;
+            centerCell.WaterFlow.y += xFlow * heightDiff;
+            
+            smallerCell.WaterFlow.x -= yFlow * heightDiff;
+            smallerCell.WaterFlow.y -= xFlow * heightDiff;
 
             if (centerCell.LithoHeight > lowest)
             {
@@ -153,6 +169,30 @@ public class CellBasedMapUpdate : AbstractMap
                 //centerCell.Sand += Physic.SandCreationSpeed;
             }
 
+            /*var centerFlow = centerCell.WaterFlow;
+            if (centerFlow.sqrMagnitude > 0.0f)
+            {
+                var index = centerFlow.normalized;
+                var otherFlowCellIndex = (y + (int) index.y) * MapSize + (x + (int) index.x);
+                var otherFlowCell = Map[otherFlowCellIndex];
+                var scale = 0.01f;
+                var amount = scale * (centerFlow / (centerCell.LithoHeight - otherFlowCell.LithoHeight)).magnitude;
+
+                var val = Mathf.Min(Mathf.Min(centerCell.Sand,centerCell.Water), amount);
+                var flow = centerFlow * val;
+                if (val > 0.01f)
+                {
+                    centerCell.Sand -= val;
+                    centerCell.Water += val;
+                    otherFlowCell.Sand += val;
+                    otherFlowCell.Water -= val;
+                    
+                    centerCell.WaterFlow -= flow;
+                    otherFlowCell.WaterFlow += flow;
+                }
+            }*/
+
+
             if (centerCell.Sand < Physic.SandStiffness) return;
 
             var ratio = Physic.SandSlopeRatio;
@@ -184,5 +224,20 @@ public class CellBasedMapUpdate : AbstractMap
                 HandleLava(centerCell, x, y);
             }
         }
+
+        return;
+        for (var index = 0; index < heightColor.Length; index++)
+        {
+            var centerCell = Map[index];
+            var c = heightColor[index];
+
+            c.r = centerCell.Stone;
+            c.g = centerCell.Stone;
+            c.b = centerCell.Stone;
+
+            heightColor[index] = c;
+        }
+
+        _testMap.Apply(heightColor);
     }
 }

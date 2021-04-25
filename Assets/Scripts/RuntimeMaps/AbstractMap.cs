@@ -22,10 +22,13 @@ namespace RuntimeMaps
 
         protected AbstractMap(int heightMapSize, PhysicData physicData,
             IReadOnlyCollection<float> stoneHeightMap,
+            IReadOnlyCollection<float> sandHeightMap,
             IReadOnlyCollection<float> waterMap)
         {
             Assert.AreEqual(stoneHeightMap.Count, heightMapSize * heightMapSize,
                 "Ensure that the the Stone Heightmap size is the square of the heightMapSize");
+            Assert.AreEqual(stoneHeightMap.Count, sandHeightMap.Count,
+                "Ensure that the Stone and the Sand Heightmaps are in equal Size");
             Assert.AreEqual(stoneHeightMap.Count, waterMap.Count,
                 "Ensure that the Water and the Stone Heightmaps are in equal Size");
 
@@ -35,6 +38,7 @@ namespace RuntimeMaps
             Map = new Cell[stoneHeightMap.Count];
         }
 
+        public virtual void Start(){}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ValidCoord(int x, int y)

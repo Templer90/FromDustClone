@@ -5,7 +5,7 @@ using UnityEngine.Rendering.VirtualTexturing;
 
 public static class MeshGenerator
 {
-    public static MeshData GenerateTerrainMesh(Func<int, int, (float, int)> heightMapFunc, int meshSize, float scale)
+    public static MeshData GenerateTerrainMesh(Func<int, int, (float, int, Cell)> heightMapFunc,Func<int, int, (float, float)> globalUVFunc, int meshSize, float scale)
     {
         var internalSize = meshSize + 1;
         var borderedSize = internalSize + 2;
@@ -44,12 +44,16 @@ public static class MeshGenerator
 
                 var percent = new Vector2((x - 1) / ((float) internalSize - 1), (y - 1) / ((float) internalSize - 1));
                 var vertexPosition = new Vector3(percent.x, 0, percent.y) * scale;
+                var (uvX, uvY) = globalUVFunc(x, y);
+                var worldUV = new Vector2(uvX, uvY);
 
-                var (heightValue, mapIndex) = heightMapFunc(x, y);
+                var (heightValue, mapIndex,cell) = heightMapFunc(x, y);
                 if (!float.IsNaN(heightValue)) height = heightValue;
                 vertexPosition.y = height;
 
-                meshBuffer.AddVertex(vertexPosition, percent, vertexIndex, mapIndex);
+                var col = Color.black;
+                col.r = cell.Sand;
+                meshBuffer.AddVertex(vertexPosition, worldUV, vertexIndex, mapIndex,col);
 
                 if (x < borderedSize - 1 && y < borderedSize - 1)
                 {
@@ -152,7 +156,7 @@ public static class MeshGenerator
                 _borderTriangles);
         }
 
-        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex, int mapIndex)
+        public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex, int mapIndex, Color col)
         {
             if (vertexIndex < 0)
             {
@@ -163,6 +167,7 @@ public static class MeshGenerator
             {
                 _vertices[vertexIndex] = vertexPosition;
                 _uvs[vertexIndex] = uv;
+                _colors[vertexIndex] = col;
             }
         }
 
